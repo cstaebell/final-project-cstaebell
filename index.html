@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Your name here">
+<meta name="author" content="Carly Staebell">
 <meta name="dcterms.date" content="2025-11-10">
 
 <title>Starry Night? – GEO511_FinalProject</title>
@@ -105,18 +105,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
-<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
 <link href="site_libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
 <script src="site_libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
-<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
-<link href="site_libs/leaflet-1.3.1/leaflet.css" rel="stylesheet">
-<script src="site_libs/leaflet-1.3.1/leaflet.js"></script>
-<link href="site_libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet">
-<script src="site_libs/proj4-2.6.2/proj4.min.js"></script>
-<script src="site_libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
-<link href="site_libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet">
-<script src="site_libs/leaflet-binding-2.2.3/leaflet.js"></script>
+<script src="site_libs/jquery-1.11.1/jquery.min.js"></script>
 <link href="site_libs/dygraphs-1.1.1/dygraph.css" rel="stylesheet">
 <script src="site_libs/dygraphs-1.1.1/dygraph-combined.js"></script>
 <script src="site_libs/dygraphs-1.1.1/shapes.js"></script>
@@ -183,7 +174,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Your name here </p>
+             <p>Carly Staebell </p>
           </div>
   </div>
     
@@ -204,198 +195,171 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>[~ 200 words]</p>
-<p>Clearly stated background and questions / hypotheses / problems being addressed. Sets up the analysis in an interesting and compelling way. Include figures if you like.</p>
+<p>Electric lights have benefited society immensely since their invention in 1879. Modern work, recreation, and transportation are made possible largely due to artificial lighting. However, when artificial outdoor lighting becomes inefficient and unnecessary, it is known as light pollution, with negative impacts on both wildlife and humans (Chepesiuk 2009).</p>
+<p>Concerns about the effects of light pollution on astronomy led to the 1988 formation of the nonprofit now known as DarkSky International (Hunter 2023). Since then, DarkSky has grown into a recognized global authority on light pollution with a mission to safeguard communities and wildlife against light pollution (DarkSky 2025a). The organization’s International Dark Sky Places program allows communities, parks, and protected areas to seek certification for efforts to preserve and protect their dark skies (DarkSky 2025b).</p>
+<p>Notably, Flagstaff, Arizona was the first International Dark Sky Place, designated in 2001. As a hub for astronomical observation, the city has been a leader in outdoor lighting policy since 1958 (Darksky 2015). Other cities, particularly those in the western US, have also recognized the need for measures to combat light pollution, and have achieved DarkSky certification. While certification is certainly not necessary for communities to implement outdoor lighting ordinances and other measures to curb light pollution, it is an indicator of places that have made dark sky conservation a priority.</p>
+<p>This project aims to explore trends in nighttime light levels first from a national contiguous US perspective, and through more detailed case studies of individual cities.</p>
 </section>
 <section id="materials-and-methods" class="level1">
 <h1>Materials and methods</h1>
-<p>[~ 200 words]</p>
-<p>Narrative: Clear narrative description of the data sources and methods. Includes data from at least two sources that were integrated / merged in R.</p>
-<p>Code: The code associated with the project is well organized and easy to follow. Demonstrates mastery of R graphics and functions.</p>
-<p>Data: The underlying data are publicly accessible via the web and downloaded/accessed within the Rmd script. If you want to use your own data, you must make it available on a website (e.g.&nbsp;Figshare) so that others are able to re-run your code.</p>
-<p>You can do bullets like this:</p>
+<p>Three Dark Sky Certified communities with different sizes and designation dates have been selected:</p>
 <ul>
-<li>The first most important thing</li>
-<li>The second most important thing</li>
-<li>The third most important thing</li>
+<li>Flagstaff, Arizona: Population ~77,000, designated 2001;</li>
+<li>Homer Glen, Illinois: Population ~25,000, designated 2011;</li>
+<li>Bee Cave, Texas: Population ~9,000, designated 2023.</li>
 </ul>
-<p>You can do numbers like this:</p>
-<ol type="1">
-<li>The first most important thing</li>
-<li>The second most important thing</li>
-<li>The third most important thing</li>
-</ol>
-<p>See <a href="http://rmarkdown.rstudio.com/" class="uri">http://rmarkdown.rstudio.com/</a> for all the amazing things you can do.</p>
-<p>Here’s my first code chunk.</p>
+<p>These three communities will each be paired with a community of similar size that has fewer, if any, ordinances controlling light pollution. Each community pair will be examined to see if there are observable differences in nighttime light emissions.</p>
+<p>Data are sourced from NASA’s Black Marble annual nighttime lights product and the US Census.</p>
+<p>Load any required packages in a code chunk:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>x<span class="ot">=</span><span class="dv">3</span><span class="sc">+</span><span class="dv">4</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>Refer to output in your narrative like this: x=7 .</p>
-<p>Load any required packages in a code chunk (you may need to install some packages):</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(leaflet)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(htmlwidgets)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(widgetframe)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">widgetframe_widgets_dir =</span> <span class="st">'widgets'</span> ) </span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">cache=</span><span class="cn">TRUE</span>)  <span class="co"># cache the results for quick compiling</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(leaflet)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(htmlwidgets)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(widgetframe)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">widgetframe_widgets_dir =</span> <span class="st">'widgets'</span> ) </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">cache=</span><span class="cn">TRUE</span>)  <span class="co"># cache the results for quick compiling</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(blackmarbler)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tigris)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyterra)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidycensus)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <section id="download-and-clean-all-required-data" class="level2">
 <h2 class="anchored" data-anchor-id="download-and-clean-all-required-data">Download and clean all required data</h2>
+<p>The nighttime lights raster and extracted values for the entire US take a while to download, so I had planned to include the following code which writes the data to files that can be loaded individually. But the files are somewhat large and I broke my original github build when I committed the update containing them. (Maybe there was another issue causing the build failure but the files are larger than recommended for storage in the data folder, anyway.)</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>n<span class="ot">=</span><span class="dv">20</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>data<span class="ot">=</span><span class="fu">data.frame</span>(<span class="at">x=</span><span class="fu">runif</span>(n,<span class="sc">-</span><span class="dv">180</span>,<span class="dv">180</span>),</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">y=</span><span class="fu">runif</span>(n,<span class="sc">-</span><span class="dv">60</span>,<span class="dv">60</span>),</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">size =</span> <span class="fu">runif</span>(n, <span class="dv">5</span>, <span class="dv">20</span>),</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">category =</span> <span class="fu">factor</span>(</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">sample</span>(letters[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>], n, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>                  ),</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">value =</span> <span class="fu">rnorm</span>(n))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download and save CONUS black marble data. </span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Define region of interest</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>nonconus <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Guam"</span>, <span class="st">"Hawaii"</span>, <span class="st">"Alaska"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>              <span class="st">"Commonwealth of the Northern Mariana Islands"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>              <span class="st">"United States Virgin Islands"</span>, <span class="st">"American Samoa"</span>, <span class="st">"Puerto Rico"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>states_sf <span class="ot">&lt;-</span> <span class="fu">states</span>() <span class="sc">|&gt;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>NAME <span class="sc">%in%</span> nonconus) <span class="sc">|&gt;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(NAME, geometry) <span class="sc">|&gt;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="st">"epsg:4326"</span>) <span class="co"># EPSG:4326 for compatibility with black marble</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Nighttime lights annual data (black marble)</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>bm_annual <span class="ot">&lt;-</span> <span class="fu">bm_raster</span>(<span class="at">roi_sf =</span> states_sf,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                      <span class="at">product_id =</span> <span class="st">"VNP46A4"</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>                      <span class="at">date =</span> <span class="fu">c</span>(<span class="dv">2012</span>,<span class="dv">2024</span>),</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>                      <span class="at">bearer =</span> nasa_bearer_token) <span class="sc">|&gt;</span> terra<span class="sc">::</span><span class="fu">mask</span>(states_sf)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="fu">writeRaster</span>(bm_annual, <span class="at">filename =</span> <span class="st">"data/blackmarble_us_2012_2024.tif"</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Create log transformed version for mapping</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="fu">app</span>(bm_annual, <span class="at">fun =</span> log1p, <span class="at">filename =</span> <span class="st">"data/log_blackmarble_us_2012_2024.tif"</span>, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co"># values</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>ntl_2012_2024 <span class="ot">&lt;-</span> <span class="fu">bm_extract</span>(<span class="at">roi_sf =</span> states_sf,</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>                         <span class="at">product_id =</span> <span class="st">"VNP46A4"</span>,</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>                         <span class="at">date =</span> <span class="dv">2012</span><span class="sc">:</span><span class="dv">2024</span>, </span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>                         <span class="at">bearer =</span> nasa_bearer_token)</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(ntl_2012_2024, <span class="st">"data/bm_vals_states_2012to2024.csv"</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span> </span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) <span class="sc">%&gt;%</span> <span class="co">#show only 1:n rows</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits=</span><span class="dv">2</span>,<span class="at">align=</span><span class="st">"c"</span>)<span class="sc">%&gt;%</span> <span class="co">#make table and round to two digits</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> </span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>, <span class="st">"responsive"</span>)) <span class="co">#apply other formatting</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="table-responsive">
-<table class="table table-striped table-hover table-condensed caption-top">
-<thead>
-<tr class="header">
-<th style="text-align: center;" data-quarto-table-cell-role="th">x</th>
-<th style="text-align: center;" data-quarto-table-cell-role="th">y</th>
-<th style="text-align: center;" data-quarto-table-cell-role="th">size</th>
-<th style="text-align: center;" data-quarto-table-cell-role="th">category</th>
-<th style="text-align: center;" data-quarto-table-cell-role="th">value</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: center;">158.70</td>
-<td style="text-align: center;">40.53</td>
-<td style="text-align: center;">13.64</td>
-<td style="text-align: center;">d</td>
-<td style="text-align: center;">-0.83</td>
-</tr>
-<tr class="even">
-<td style="text-align: center;">-139.53</td>
-<td style="text-align: center;">41.12</td>
-<td style="text-align: center;">7.37</td>
-<td style="text-align: center;">b</td>
-<td style="text-align: center;">1.82</td>
-</tr>
-<tr class="odd">
-<td style="text-align: center;">28.61</td>
-<td style="text-align: center;">50.43</td>
-<td style="text-align: center;">10.50</td>
-<td style="text-align: center;">c</td>
-<td style="text-align: center;">0.99</td>
-</tr>
-<tr class="even">
-<td style="text-align: center;">147.33</td>
-<td style="text-align: center;">-21.73</td>
-<td style="text-align: center;">15.14</td>
-<td style="text-align: center;">a</td>
-<td style="text-align: center;">1.33</td>
-</tr>
-<tr class="odd">
-<td style="text-align: center;">-18.51</td>
-<td style="text-align: center;">-28.31</td>
-<td style="text-align: center;">16.31</td>
-<td style="text-align: center;">e</td>
-<td style="text-align: center;">-0.10</td>
-</tr>
-<tr class="even">
-<td style="text-align: center;">-19.86</td>
-<td style="text-align: center;">-21.85</td>
-<td style="text-align: center;">19.80</td>
-<td style="text-align: center;">c</td>
-<td style="text-align: center;">-0.16</td>
-</tr>
-<tr class="odd">
-<td style="text-align: center;">33.09</td>
-<td style="text-align: center;">6.93</td>
-<td style="text-align: center;">11.66</td>
-<td style="text-align: center;">b</td>
-<td style="text-align: center;">-0.15</td>
-</tr>
-<tr class="even">
-<td style="text-align: center;">80.76</td>
-<td style="text-align: center;">36.41</td>
-<td style="text-align: center;">17.47</td>
-<td style="text-align: center;">d</td>
-<td style="text-align: center;">0.04</td>
-</tr>
-<tr class="odd">
-<td style="text-align: center;">-40.96</td>
-<td style="text-align: center;">24.06</td>
-<td style="text-align: center;">18.22</td>
-<td style="text-align: center;">b</td>
-<td style="text-align: center;">-0.33</td>
-</tr>
-<tr class="even">
-<td style="text-align: center;">146.80</td>
-<td style="text-align: center;">15.29</td>
-<td style="text-align: center;">17.22</td>
-<td style="text-align: center;">e</td>
-<td style="text-align: center;">-0.02</td>
-</tr>
-</tbody>
-</table>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download population data</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>us_pop <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geograph =</span> <span class="st">"place"</span>, <span class="at">state =</span> <span class="cn">NULL</span>, </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">variables =</span> <span class="st">"B01003_001"</span>, <span class="at">key =</span> census_api_key)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>az_pop <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"place"</span>, <span class="at">state =</span> <span class="st">"AZ"</span>, </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                         <span class="at">variables =</span> <span class="st">"B01003_001"</span>, <span class="at">key =</span> census_api_key)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>il_pop <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"place"</span>, <span class="at">state =</span> <span class="st">"IL"</span>, </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                         <span class="at">variables =</span> <span class="st">"B01003_001"</span>, <span class="at">key =</span> census_api_key)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>tx_pop <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span> <span class="st">"place"</span>, <span class="at">state =</span> <span class="st">"TX"</span>, </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>                         <span class="at">variables =</span> <span class="st">"B01003_001"</span>, <span class="at">key =</span> census_api_key)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Download local geographies: selected Dark Sky Places</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>flagstaff <span class="ot">&lt;-</span> <span class="fu">places</span>(<span class="at">state =</span> <span class="st">"AZ"</span>, <span class="at">cb =</span> <span class="cn">TRUE</span>, <span class="at">year =</span> <span class="dv">2024</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(NAME <span class="sc">==</span> <span class="st">"Flagstaff"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="st">"epsg:4326"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(us_pop, <span class="at">by =</span> <span class="st">"GEOID"</span>)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>homerglen <span class="ot">&lt;-</span> <span class="fu">places</span>(<span class="at">state =</span> <span class="st">"IL"</span>, <span class="at">cb =</span> <span class="cn">TRUE</span>, <span class="at">year =</span> <span class="dv">2024</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(NAME <span class="sc">==</span> <span class="st">"Homer Glen"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="st">"epsg:4326"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(us_pop, <span class="at">by =</span> <span class="st">"GEOID"</span>)</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>beecave <span class="ot">&lt;-</span> <span class="fu">places</span>(<span class="at">state =</span> <span class="st">"TX"</span>, <span class="at">cb =</span> <span class="cn">TRUE</span>, <span class="at">year =</span> <span class="dv">2024</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(NAME <span class="sc">==</span> <span class="st">"Bee Cave"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="st">"epsg:4326"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(us_pop, <span class="at">by =</span> <span class="st">"GEOID"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Find suitable comparison cities</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>flagstaff_sim_pop <span class="ot">&lt;-</span> us_pop <span class="sc">|&gt;</span> <span class="fu">filter</span>(estimate <span class="sc">&gt;=</span> (flagstaff<span class="sc">$</span>estimate <span class="sc">-</span> <span class="fl">0.01</span><span class="sc">*</span>flagstaff<span class="sc">$</span>estimate) </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                                <span class="sc">&amp;</span> estimate <span class="sc">&lt;=</span> (flagstaff<span class="sc">$</span>estimate <span class="sc">+</span> <span class="fl">0.01</span><span class="sc">*</span>flagstaff<span class="sc">$</span>estimate)) <span class="sc">|&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(NAME, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"city"</span>, <span class="st">"state"</span>), <span class="at">sep =</span> <span class="st">", "</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>homerglen_sim_pop <span class="ot">&lt;-</span> us_pop <span class="sc">|&gt;</span> <span class="fu">filter</span>(estimate <span class="sc">&gt;=</span> (homerglen<span class="sc">$</span>estimate <span class="sc">-</span> <span class="fl">0.005</span><span class="sc">*</span>homerglen<span class="sc">$</span>estimate) </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                                <span class="sc">&amp;</span> estimate <span class="sc">&lt;=</span> (homerglen<span class="sc">$</span>estimate <span class="sc">+</span> <span class="fl">0.005</span><span class="sc">*</span>homerglen<span class="sc">$</span>estimate)) <span class="sc">|&gt;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(NAME, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"city"</span>, <span class="st">"state"</span>), <span class="at">sep =</span> <span class="st">", "</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>beecave_sim_pop <span class="ot">&lt;-</span> us_pop <span class="sc">|&gt;</span> <span class="fu">filter</span>(estimate <span class="sc">&gt;=</span> (beecave<span class="sc">$</span>estimate <span class="sc">-</span> <span class="fl">0.005</span><span class="sc">*</span>beecave<span class="sc">$</span>estimate) </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                                <span class="sc">&amp;</span> estimate <span class="sc">&lt;=</span> (beecave<span class="sc">$</span>estimate <span class="sc">+</span> <span class="fl">0.005</span><span class="sc">*</span>beecave<span class="sc">$</span>estimate)) <span class="sc">|&gt;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(NAME, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"city"</span>, <span class="st">"state"</span>), <span class="at">sep =</span> <span class="st">", "</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Download/process comparison city data</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a> <span class="co"># Flagstaff counterpart</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>scranton <span class="ot">&lt;-</span> <span class="fu">places</span>(<span class="at">state =</span> <span class="st">"PA"</span>, <span class="at">cb =</span> <span class="cn">TRUE</span>, <span class="at">year =</span> <span class="dv">2024</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(NAME <span class="sc">==</span> <span class="st">"Scranton"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(us_pop, <span class="at">by =</span> <span class="st">"GEOID"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="st">"epsg:4326"</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a> <span class="co"># Homer Glen counterpart</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>belvidere <span class="ot">&lt;-</span> <span class="fu">places</span>(<span class="at">state =</span> <span class="st">"IL"</span>, <span class="at">cb =</span> <span class="cn">TRUE</span>, <span class="at">year =</span> <span class="dv">2024</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(NAME <span class="sc">==</span> <span class="st">"Belvidere"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(us_pop, <span class="at">by =</span> <span class="st">"GEOID"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="st">"epsg:4326"</span>)</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a> <span class="co"># Bee Cave counterpart</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>clanton <span class="ot">&lt;-</span> <span class="fu">places</span>(<span class="at">state =</span> <span class="st">"AL"</span>, <span class="at">cb =</span> <span class="cn">TRUE</span>, <span class="at">year =</span> <span class="dv">2024</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(NAME <span class="sc">==</span> <span class="st">"Clanton"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(us_pop, <span class="at">by =</span> <span class="st">"GEOID"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="st">"epsg:4326"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Add any additional processing steps here.</p>
 </section>
 </section>
 <section id="results" class="level1">
 <h1>Results</h1>
-<p>[~200 words]</p>
-<p>Tables and figures (maps and other graphics) are carefully planned to convey the results of your analysis. Intense exploration and evidence of many trials and failures. The author looked at the data in many different ways before coming to the final presentation of the data.</p>
-<p>Show tables, plots, etc. and describe them.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">leaflet</span>(data) <span class="sc">%&gt;%</span> </span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">addTiles</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">addCircleMarkers</span>(<span class="sc">~</span>x, <span class="sc">~</span>y, <span class="at">radius =</span> <span class="sc">~</span>size,<span class="at">color =</span> <span class="sc">~</span><span class="fu">as.factor</span>(category)) <span class="sc">%&gt;%</span> </span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">addPopups</span>(<span class="sc">~</span>x[<span class="dv">2</span>], <span class="sc">~</span>y[<span class="dv">2</span>], <span class="st">"Random popup"</span>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>m  <span class="co"># a map with the default OSM tile layer</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div class="leaflet html-widget html-fill-item" id="htmlwidget-a98542d4b50597cad3b8" style="width:100%;height:325px;"></div>
-<script type="application/json" data-for="htmlwidget-a98542d4b50597cad3b8">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"https://openstreetmap.org/copyright/\">OpenStreetMap<\/a>,  <a href=\"https://opendatacommons.org/licenses/odbl/\">ODbL<\/a>"}]},{"method":"addCircleMarkers","args":[[40.53476706147194,41.12038205377758,50.43129650875926,-21.73140465281904,-28.31063878722489,-21.84723612852395,6.929182671010494,36.41460916958749,24.0635181684047,15.28670629486442,20.77253557741642,57.52304378896952,-5.710637178272009,58.37615679949522,-37.58087888360023,-16.57060797326267,-21.00599289871752,-21.95625714026392,40.62743685208261,-27.26852299645543],[158.695527529344,-139.5251368917525,28.60524072311819,147.3346629459411,-18.50592188537121,-19.85885216854513,33.09253860265017,80.75769832357764,-40.96000783145428,146.8034884985536,0.9537639375776052,144.4393868744373,-85.36808897741139,106.4635376539081,-30.51611381582916,24.89291659556329,-168.9207400381565,157.5943282619119,-111.1188211943954,-51.60583580844104],[13.6416493402794,7.369192299665883,10.50431457464583,15.14063317212276,16.31135149393231,19.79677288210951,11.65532253682613,17.4690163671039,18.21752218878828,17.21842179773375,11.68148020049557,18.18475220235996,7.235553662758321,9.233758593909442,7.511232977267355,9.359496759716421,8.385158281307667,5.302763384534046,12.31009367853403,6.424704306991771],null,null,{"interactive":true,"className":"","stroke":true,"color":["d","b","c","a","e","c","b","d","b","e","e","e","b","b","c","c","c","e","b","d"],"weight":5,"opacity":0.5,"fill":true,"fillColor":["d","b","c","a","e","c","b","d","b","e","e","e","b","b","c","c","c","e","b","d"],"fillOpacity":0.2},null,null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addPopups","args":[41.12038205377758,-139.5251368917525,"Random popup",null,null,{"maxWidth":300,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"className":""}]}],"limits":{"lat":[-37.58087888360023,58.37615679949522],"lng":[-168.9207400381565,158.695527529344]}},"evals":[],"jsHooks":[]}</script>
-<p>Map of completely random data</p>
-</div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span> </span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>x,<span class="at">y=</span>y,<span class="at">col=</span>category))<span class="sc">+</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
 <section id="dygraphs-example" class="level3">
 <h3 class="anchored" data-anchor-id="dygraphs-example">Dygraphs Example</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dygraphs)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dygraph</span>(nhtemp, <span class="at">main =</span> <span class="st">"New Haven Temperatures"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dyRangeSelector</span>(<span class="at">dateWindow =</span> <span class="fu">c</span>(<span class="st">"1920-01-01"</span>, <span class="st">"1960-01-01"</span>)) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dygraphs)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dygraph</span>(nhtemp, <span class="at">main =</span> <span class="st">"New Haven Temperatures"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dyRangeSelector</span>(<span class="at">dateWindow =</span> <span class="fu">c</span>(<span class="st">"1920-01-01"</span>, <span class="st">"1960-01-01"</span>)) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div class="dygraphs html-widget html-fill-item" id="htmlwidget-a7e0e94b12b61fe3c1df" style="width:100%;height:464px;"></div>
-<script type="application/json" data-for="htmlwidget-a7e0e94b12b61fe3c1df">{"x":{"attrs":{"title":"New Haven Temperatures","labels":["year","V1"],"legend":"auto","retainDateWindow":false,"axes":{"x":{"pixelsPerLabel":60}},"showRangeSelector":true,"dateWindow":["1920-01-01T00:00:00.000Z","1960-01-01T00:00:00.000Z"],"rangeSelectorHeight":40,"rangeSelectorPlotFillColor":" #A7B1C4","rangeSelectorPlotStrokeColor":"#808FAB","interactionModel":"Dygraph.Interaction.defaultModel"},"scale":"yearly","annotations":[],"shadings":[],"events":[],"format":"date","data":[["1912-01-01T00:00:00.000Z","1913-01-01T00:00:00.000Z","1914-01-01T00:00:00.000Z","1915-01-01T00:00:00.000Z","1916-01-01T00:00:00.000Z","1917-01-01T00:00:00.000Z","1918-01-01T00:00:00.000Z","1919-01-01T00:00:00.000Z","1920-01-01T00:00:00.000Z","1921-01-01T00:00:00.000Z","1922-01-01T00:00:00.000Z","1923-01-01T00:00:00.000Z","1924-01-01T00:00:00.000Z","1925-01-01T00:00:00.000Z","1926-01-01T00:00:00.000Z","1927-01-01T00:00:00.000Z","1928-01-01T00:00:00.000Z","1929-01-01T00:00:00.000Z","1930-01-01T00:00:00.000Z","1931-01-01T00:00:00.000Z","1932-01-01T00:00:00.000Z","1933-01-01T00:00:00.000Z","1934-01-01T00:00:00.000Z","1935-01-01T00:00:00.000Z","1936-01-01T00:00:00.000Z","1937-01-01T00:00:00.000Z","1938-01-01T00:00:00.000Z","1939-01-01T00:00:00.000Z","1940-01-01T00:00:00.000Z","1941-01-01T00:00:00.000Z","1942-01-01T00:00:00.000Z","1943-01-01T00:00:00.000Z","1944-01-01T00:00:00.000Z","1945-01-01T00:00:00.000Z","1946-01-01T00:00:00.000Z","1947-01-01T00:00:00.000Z","1948-01-01T00:00:00.000Z","1949-01-01T00:00:00.000Z","1950-01-01T00:00:00.000Z","1951-01-01T00:00:00.000Z","1952-01-01T00:00:00.000Z","1953-01-01T00:00:00.000Z","1954-01-01T00:00:00.000Z","1955-01-01T00:00:00.000Z","1956-01-01T00:00:00.000Z","1957-01-01T00:00:00.000Z","1958-01-01T00:00:00.000Z","1959-01-01T00:00:00.000Z","1960-01-01T00:00:00.000Z","1961-01-01T00:00:00.000Z","1962-01-01T00:00:00.000Z","1963-01-01T00:00:00.000Z","1964-01-01T00:00:00.000Z","1965-01-01T00:00:00.000Z","1966-01-01T00:00:00.000Z","1967-01-01T00:00:00.000Z","1968-01-01T00:00:00.000Z","1969-01-01T00:00:00.000Z","1970-01-01T00:00:00.000Z","1971-01-01T00:00:00.000Z"],[49.9,52.3,49.4,51.1,49.4,47.9,49.8,50.9,49.3,51.9,50.8,49.6,49.3,50.6,48.4,50.7,50.9,50.6,51.5,52.8,51.8,51.1,49.8,50.2,50.4,51.6,51.8,50.9,48.8,51.7,51,50.6,51.7,51.5,52.1,51.3,51,54,51.4,52.7,53.1,54.6,52,52,50.9,52.6,50.2,52.6,51.6,51.9,50.5,50.9,51.7,51.4,51.7,50.8,51.9,51.8,51.9,53]]},"evals":["attrs.interactionModel"],"jsHooks":[]}</script>
+<div class="dygraphs html-widget html-fill-item" id="htmlwidget-b848e0bcdbc0efa6e8ff" style="width:100%;height:464px;"></div>
+<script type="application/json" data-for="htmlwidget-b848e0bcdbc0efa6e8ff">{"x":{"attrs":{"title":"New Haven Temperatures","labels":["year","V1"],"legend":"auto","retainDateWindow":false,"axes":{"x":{"pixelsPerLabel":60}},"showRangeSelector":true,"dateWindow":["1920-01-01T00:00:00.000Z","1960-01-01T00:00:00.000Z"],"rangeSelectorHeight":40,"rangeSelectorPlotFillColor":" #A7B1C4","rangeSelectorPlotStrokeColor":"#808FAB","interactionModel":"Dygraph.Interaction.defaultModel"},"scale":"yearly","annotations":[],"shadings":[],"events":[],"format":"date","data":[["1912-01-01T00:00:00.000Z","1913-01-01T00:00:00.000Z","1914-01-01T00:00:00.000Z","1915-01-01T00:00:00.000Z","1916-01-01T00:00:00.000Z","1917-01-01T00:00:00.000Z","1918-01-01T00:00:00.000Z","1919-01-01T00:00:00.000Z","1920-01-01T00:00:00.000Z","1921-01-01T00:00:00.000Z","1922-01-01T00:00:00.000Z","1923-01-01T00:00:00.000Z","1924-01-01T00:00:00.000Z","1925-01-01T00:00:00.000Z","1926-01-01T00:00:00.000Z","1927-01-01T00:00:00.000Z","1928-01-01T00:00:00.000Z","1929-01-01T00:00:00.000Z","1930-01-01T00:00:00.000Z","1931-01-01T00:00:00.000Z","1932-01-01T00:00:00.000Z","1933-01-01T00:00:00.000Z","1934-01-01T00:00:00.000Z","1935-01-01T00:00:00.000Z","1936-01-01T00:00:00.000Z","1937-01-01T00:00:00.000Z","1938-01-01T00:00:00.000Z","1939-01-01T00:00:00.000Z","1940-01-01T00:00:00.000Z","1941-01-01T00:00:00.000Z","1942-01-01T00:00:00.000Z","1943-01-01T00:00:00.000Z","1944-01-01T00:00:00.000Z","1945-01-01T00:00:00.000Z","1946-01-01T00:00:00.000Z","1947-01-01T00:00:00.000Z","1948-01-01T00:00:00.000Z","1949-01-01T00:00:00.000Z","1950-01-01T00:00:00.000Z","1951-01-01T00:00:00.000Z","1952-01-01T00:00:00.000Z","1953-01-01T00:00:00.000Z","1954-01-01T00:00:00.000Z","1955-01-01T00:00:00.000Z","1956-01-01T00:00:00.000Z","1957-01-01T00:00:00.000Z","1958-01-01T00:00:00.000Z","1959-01-01T00:00:00.000Z","1960-01-01T00:00:00.000Z","1961-01-01T00:00:00.000Z","1962-01-01T00:00:00.000Z","1963-01-01T00:00:00.000Z","1964-01-01T00:00:00.000Z","1965-01-01T00:00:00.000Z","1966-01-01T00:00:00.000Z","1967-01-01T00:00:00.000Z","1968-01-01T00:00:00.000Z","1969-01-01T00:00:00.000Z","1970-01-01T00:00:00.000Z","1971-01-01T00:00:00.000Z"],[49.9,52.3,49.4,51.1,49.4,47.9,49.8,50.9,49.3,51.9,50.8,49.6,49.3,50.6,48.4,50.7,50.9,50.6,51.5,52.8,51.8,51.1,49.8,50.2,50.4,51.6,51.8,50.9,48.8,51.7,51,50.6,51.7,51.5,52.1,51.3,51,54,51.4,52.7,53.1,54.6,52,52,50.9,52.6,50.2,52.6,51.6,51.9,50.5,50.9,51.7,51.4,51.7,50.8,51.9,51.8,51.9,53]]},"evals":["attrs.interactionModel"],"jsHooks":[]}</script>
 </div>
 </div>
 </section>
 </section>
 <section id="conclusions" class="level1">
 <h1>Conclusions</h1>
-<p>[~200 words]</p>
-<p>Clear summary adequately describing the results and putting them in context. Discussion of further questions and ways to continue investigation.</p>
 </section>
 <section id="references" class="level1">
 <h1>References</h1>
-<p>All sources are cited in a consistent manner</p>
+<p>Bocinsky, R.K., Beaudette, D., Chamberlain, S., Hollister, J., Gustavsen, J. (2025). Package ‘FedData’. <a href="https://cran.r-project.org/web/packages/FedData/FedData.pdf" class="uri">https://cran.r-project.org/web/packages/FedData/FedData.pdf</a>.</p>
+<p>Chepesiuk, R. (2009). Missing the dark: health effects of light pollution. Environmental Health Perspectives, 117(1), A20+. <a href="https://www.jstor.org/stable/40066663" class="uri">https://www.jstor.org/stable/40066663</a>.</p>
+<p>DarkSky International. (2015). Flagstaff, Arizona. <a href="https://darksky.org/places/flagstaff-arizona-dark-sky-community/" class="uri">https://darksky.org/places/flagstaff-arizona-dark-sky-community/</a>.</p>
+<p>DarkSky International. (2025a). About DarkSky. <a href="https://darksky.org/about/#mission" class="uri">https://darksky.org/about/#mission</a>.</p>
+<p>DarkSky International (2025b). International Dark Sky Places. <a href="https://darksky.org/what-we-do/international-dark-sky-places/" class="uri">https://darksky.org/what-we-do/international-dark-sky-places/</a>.</p>
+<p>Hunter, T., (2023). The birth of DarkSky (IDA) and a lifelong mission fighting light pollution. DarkSky. <a href="https://darksky.org/news/the-birth-of-ida-and-a-lifelong-mission-fighting-light-pollution/" class="uri">https://darksky.org/news/the-birth-of-ida-and-a-lifelong-mission-fighting-light-pollution/</a>.</p>
+<p>Marty, R., Vicente, G.S. (2025). Package ‘blackmarbler’. <a href="https://cran.r-project.org/web/packages/blackmarbler/blackmarbler.pdf" class="uri">https://cran.r-project.org/web/packages/blackmarbler/blackmarbler.pdf</a>.</p>
+<p>NASA. Black Marble. <a href="https://blackmarble.gsfc.nasa.gov/" class="uri">https://blackmarble.gsfc.nasa.gov/</a>.</p>
+<p>Schultz, J. (2022). States shut out light pollution. National Conference of State Legislatures. <a href="https://www.ncsl.org/environment-and-natural-resources/states-shut-out-light-pollution" class="uri">https://www.ncsl.org/environment-and-natural-resources/states-shut-out-light-pollution</a></p>
+<p>Stare, J., Kyba, C. (2025): Radiance Light Trends. GFZ Data Services. <a href="https://doi.org/10.5880/GFZ.1.4.2019.001" class="uri">https://doi.org/10.5880/GFZ.1.4.2019.001</a>.</p>
+<p>Walker, K., Herman, M. (2025). tidycensus: Load US Census Boundary and Attribute Data as ‘tidyverse’ and ‘sf’-Ready Data Frames. R package version 1.7.3, <a href="https://walker-data.com/tidycensus/" class="uri">https://walker-data.com/tidycensus/</a>.</p>
+<p>Weishampel, Z.A., Cheng, W.-H. and Weishampel, J.F. (2016), Sea turtle nesting patterns in Florida vis-à-vis satellite-derived measures of artificial lighting. Remote Sens Ecol Conserv, 2: 59-72. <a href="https://doi.org/10.1002/rse2.12" class="uri">https://doi.org/10.1002/rse2.12</a>.</p>
 
 
 </section>
