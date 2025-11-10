@@ -1,52 +1,38 @@
 ---
 title: "Starry Night?"
 subtitle: An exploration of nighttime lights and the Dark-Sky Movement in the US
-author: Your name here
+author: Carly Staebell
 date: today
 date-format: long
 ---
 
 # Introduction
 
-\[\~ 200 words\]
+Electric lights have benefited society immensely since their invention in 1879. Modern work, recreation, and transportation are made possible largely due to artificial lighting. However, when artificial outdoor lighting becomes inefficient and unnecessary, it is known as light pollution, with negative impacts on both wildlife and humans (Chepesiuk 2009). 
 
-Clearly stated background and questions / hypotheses / problems being addressed. Sets up the analysis in an interesting and compelling way. Include figures if you like.
+Concerns about the effects of light pollution on astronomy led to the 1988 formation of the nonprofit now known as DarkSky International (Hunter 2023). Since then, DarkSky has grown into a recognized global authority on light pollution with a mission to safeguard communities and wildlife against light pollution (DarkSky 2025a). The organization's International Dark Sky Places program allows communities, parks, and protected areas to seek certification for efforts to preserve and protect their dark skies (DarkSky 2025b). 
+
+Notably, Flagstaff, Arizona was the first International Dark Sky Place, designated in 2001. As a hub for astronomical observation, the city has been a leader in outdoor lighting policy since 1958 (Darksky 2015). Other cities, particularly those in the western US, have also recognized the need for measures to combat light pollution, and have achieved DarkSky certification. While certification is certainly not necessary for communities to implement outdoor lighting ordinances and other measures to curb light pollution, it is an indicator of places that have made dark sky conservation a priority. 
+
+This project aims to explore trends in nighttime light levels first from a national contiguous US perspective, and through more detailed case studies of individual cities. 
 
 # Materials and methods
 
-\[\~ 200 words\]
+Three Dark Sky Certified communities with different sizes and designation dates have been selected: 
 
-Narrative: Clear narrative description of the data sources and methods. Includes data from at least two sources that were integrated / merged in R.
+* Flagstaff, Arizona: Population ~77,000, designated 2001;
+* Homer Glen, Illinois: Population ~25,000, designated 2011;
+* Bee Cave, Texas: Population ~9,000, designated 2023.
 
-Code: The code associated with the project is well organized and easy to follow. Demonstrates mastery of R graphics and functions.
+These three communities will each be paired with a community of similar size that has fewer, if any, ordinances controlling light pollution. Each community pair will be examined to see if there are observable differences in nighttime light emissions.
 
-Data: The underlying data are publicly accessible via the web and downloaded/accessed within the Rmd script. If you want to use your own data, you must make it available on a website (e.g. Figshare) so that others are able to re-run your code.
+Data are sourced from NASA's Black Marble annual nighttime lights product and the US Census.
 
-You can do bullets like this:
 
--   The first most important thing
--   The second most important thing
--   The third most important thing
 
-You can do numbers like this:
+Load any required packages in a code chunk:
 
-1.  The first most important thing
-2.  The second most important thing
-3.  The third most important thing
-
-See <http://rmarkdown.rstudio.com/> for all the amazing things you can do.
-
-Here's my first code chunk.
-
-```{r}
-x=3+4
-```
-
-Refer to output in your narrative like this: x=`r x` .
-
-Load any required packages in a code chunk (you may need to install some packages):
-
-```{r, message=F, warning=F}
+```{r load packages, message=F, warning=F}
 library(tidyverse)
 library(leaflet)
 library(kableExtra)
@@ -54,27 +40,121 @@ library(htmlwidgets)
 library(widgetframe)
 knitr::opts_chunk$set(widgetframe_widgets_dir = 'widgets' ) 
 knitr::opts_chunk$set(cache=TRUE)  # cache the results for quick compiling
+
+library(blackmarbler)
+library(sf)
+library(terra)
+library(tigris)
+library(tidyterra)
+library(tidycensus)
+library(patchwork)
 ```
+
 
 ## Download and clean all required data
 
-```{r}
-n=20
-data=data.frame(x=runif(n,-180,180),
-                y=runif(n,-60,60),
-                size = runif(n, 5, 20),
-                category = factor(
-                  sample(letters[1:5], n, replace = TRUE)
-                  ),
-                value = rnorm(n))
+The nighttime lights raster and extracted values for the entire US take a while to download, so I had planned to include the following code which writes the data to files that can be loaded individually. But the files are somewhat large and I broke my original github build when I committed the update containing them. (Maybe there was another issue causing the build failure but the files are larger than recommended for storage in the data folder, anyway.)
+
+```{r US Black Marble Data, eval = F}
+# Download and save CONUS black marble data. 
+
+# Define region of interest
+nonconus <- c("Guam", "Hawaii", "Alaska",
+              "Commonwealth of the Northern Mariana Islands",
+              "United States Virgin Islands", "American Samoa", "Puerto Rico")
+states_sf <- states() |>
+  filter(!NAME %in% nonconus) |>
+  select(NAME, geometry) |>
+  st_transform(crs = "epsg:4326") # EPSG:4326 for compatibility with black marble
+
+# Nighttime lights annual data (black marble)
+bm_annual <- bm_raster(roi_sf = states_sf,
+                      product_id = "VNP46A4",
+                      date = c(2012,2024),
+                      bearer = nasa_bearer_token) |> terra::mask(states_sf)
+
+writeRaster(bm_annual, filename = "data/blackmarble_us_2012_2024.tif")
+
+# Create log transformed version for mapping
+app(bm_annual, fun = log1p, filename = "data/log_blackmarble_us_2012_2024.tif", overwrite = TRUE)
+
+# values
+ntl_2012_2024 <- bm_extract(roi_sf = states_sf,
+                         product_id = "VNP46A4",
+                         date = 2012:2024, 
+                         bearer = nasa_bearer_token)
+
+write.csv(ntl_2012_2024, "data/bm_vals_states_2012to2024.csv", row.names = FALSE)
 ```
 
-```{r, results='asis'}
-data %>% 
-  slice(1:10) %>% #show only 1:n rows
-  kable(digits=2,align="c")%>% #make table and round to two digits
-  kable_styling(bootstrap_options = 
-                  c("striped", "hover", "condensed", "responsive")) #apply other formatting
+
+```{r download census data, warning = F, message = F, output = F}
+
+# Download population data
+us_pop <- get_acs(geograph = "place", state = NULL, 
+                  variables = "B01003_001", key = census_api_key)
+
+az_pop <- get_acs(geography = "place", state = "AZ", 
+                         variables = "B01003_001", key = census_api_key)
+
+il_pop <- get_acs(geography = "place", state = "IL", 
+                         variables = "B01003_001", key = census_api_key)
+
+tx_pop <- get_acs(geography = "place", state = "TX", 
+                         variables = "B01003_001", key = census_api_key)
+
+# Download local geographies: selected Dark Sky Places
+flagstaff <- places(state = "AZ", cb = TRUE, year = 2024) |>
+  filter(NAME == "Flagstaff") |>
+  st_transform(crs = "epsg:4326") |>
+  left_join(us_pop, by = "GEOID")
+
+homerglen <- places(state = "IL", cb = TRUE, year = 2024) |>
+  filter(NAME == "Homer Glen") |>
+  st_transform(crs = "epsg:4326") |>
+  left_join(us_pop, by = "GEOID")
+
+beecave <- places(state = "TX", cb = TRUE, year = 2024) |>
+  filter(NAME == "Bee Cave") |>
+  st_transform(crs = "epsg:4326") |>
+  left_join(us_pop, by = "GEOID")
+
+```
+
+```{r process census data, message = F, output = F}
+
+# Find suitable comparison cities
+flagstaff_sim_pop <- us_pop |> filter(estimate >= (flagstaff$estimate - 0.01*flagstaff$estimate) 
+                                & estimate <= (flagstaff$estimate + 0.01*flagstaff$estimate)) |>
+  separate(NAME, into = c("city", "state"), sep = ", ")
+
+homerglen_sim_pop <- us_pop |> filter(estimate >= (homerglen$estimate - 0.005*homerglen$estimate) 
+                                & estimate <= (homerglen$estimate + 0.005*homerglen$estimate)) |>
+  separate(NAME, into = c("city", "state"), sep = ", ")
+
+beecave_sim_pop <- us_pop |> filter(estimate >= (beecave$estimate - 0.005*beecave$estimate) 
+                                & estimate <= (beecave$estimate + 0.005*beecave$estimate)) |>
+  separate(NAME, into = c("city", "state"), sep = ", ")
+
+# Download/process comparison city data
+ # Flagstaff counterpart
+scranton <- places(state = "PA", cb = TRUE, year = 2024) |>
+  filter(NAME == "Scranton") |>
+  left_join(us_pop, by = "GEOID") |>
+  st_transform(crs = "epsg:4326")
+
+ # Homer Glen counterpart
+belvidere <- places(state = "IL", cb = TRUE, year = 2024) |>
+  filter(NAME == "Belvidere") |>
+  left_join(us_pop, by = "GEOID") |>
+  st_transform(crs = "epsg:4326")
+
+ # Bee Cave counterpart
+clanton <- places(state = "AL", cb = TRUE, year = 2024) |>
+  filter(NAME == "Clanton") |>
+  left_join(us_pop, by = "GEOID") |>
+  st_transform(crs = "epsg:4326")
+
 ```
 
 Add any additional processing steps here.
