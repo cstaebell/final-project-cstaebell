@@ -9,16 +9,16 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "My Final Project Template",
+    "title": "Starry Night?",
     "section": "",
     "text": "[~ 200 words]\nClearly stated background and questions / hypotheses / problems being addressed. Sets up the analysis in an interesting and compelling way. Include figures if you like."
   },
   {
     "objectID": "index.html#download-and-clean-all-required-data",
     "href": "index.html#download-and-clean-all-required-data",
-    "title": "My Final Project Template",
+    "title": "Starry Night?",
     "section": "Download and clean all required data",
-    "text": "Download and clean all required data\n\nn=20\ndata=data.frame(x=runif(n,-180,180),\n                y=runif(n,-60,60),\n                size = runif(n, 5, 20),\n                category = factor(\n                  sample(letters[1:5], n, replace = TRUE)\n                  ),\n                value = rnorm(n))\n\ndata %&gt;% \n  slice(1:10) %&gt;% #show only 1:n rows\n  kable(digits=2,align=\"c\")%&gt;% #make table and round to two digits\n  kable_styling(bootstrap_options = \n                  c(\"striped\", \"hover\", \"condensed\", \"responsive\")) #apply other formatting\n\n\n\n\nx\ny\nsize\ncategory\nvalue\n\n\n\n\n109.38\n-24.86\n14.96\nd\n-0.86\n\n\n-47.14\n-40.72\n7.38\ne\n2.34\n\n\n-164.09\n22.26\n13.46\nc\n-0.23\n\n\n107.41\n55.34\n9.95\nb\n-0.32\n\n\n160.77\n-17.92\n14.18\ne\n-0.68\n\n\n109.40\n-57.92\n9.51\nd\n-0.19\n\n\n-73.33\n19.12\n14.43\nb\n-0.69\n\n\n163.13\n2.66\n18.37\ne\n-0.45\n\n\n7.08\n33.09\n7.65\nb\n-0.27\n\n\n-149.65\n44.54\n18.89\nc\n-0.88\n\n\n\n\nAdd any additional processing steps here."
+    "text": "Download and clean all required data\n\nn=20\ndata=data.frame(x=runif(n,-180,180),\n                y=runif(n,-60,60),\n                size = runif(n, 5, 20),\n                category = factor(\n                  sample(letters[1:5], n, replace = TRUE)\n                  ),\n                value = rnorm(n))\n\ndata %&gt;% \n  slice(1:10) %&gt;% #show only 1:n rows\n  kable(digits=2,align=\"c\")%&gt;% #make table and round to two digits\n  kable_styling(bootstrap_options = \n                  c(\"striped\", \"hover\", \"condensed\", \"responsive\")) #apply other formatting\n\n\n\n\nx\ny\nsize\ncategory\nvalue\n\n\n\n\n158.70\n40.53\n13.64\nd\n-0.83\n\n\n-139.53\n41.12\n7.37\nb\n1.82\n\n\n28.61\n50.43\n10.50\nc\n0.99\n\n\n147.33\n-21.73\n15.14\na\n1.33\n\n\n-18.51\n-28.31\n16.31\ne\n-0.10\n\n\n-19.86\n-21.85\n19.80\nc\n-0.16\n\n\n33.09\n6.93\n11.66\nb\n-0.15\n\n\n80.76\n36.41\n17.47\nd\n0.04\n\n\n-40.96\n24.06\n18.22\nb\n-0.33\n\n\n146.80\n15.29\n17.22\ne\n-0.02\n\n\n\n\nAdd any additional processing steps here."
   },
   {
     "objectID": "about.html",
