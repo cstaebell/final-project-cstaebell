@@ -1,0 +1,30 @@
+[
+  {
+    "objectID": "data/Readme.html",
+    "href": "data/Readme.html",
+    "title": "Data Folder",
+    "section": "",
+    "text": "Data Folder\nPlace any data needed by your analysis in this folder. Please do not store large files here. Then read in any data using the ‘data’ path. For example, read_csv(\"data/data.csv\")."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "My Final Project Template",
+    "section": "",
+    "text": "[~ 200 words]\nClearly stated background and questions / hypotheses / problems being addressed. Sets up the analysis in an interesting and compelling way. Include figures if you like."
+  },
+  {
+    "objectID": "index.html#download-and-clean-all-required-data",
+    "href": "index.html#download-and-clean-all-required-data",
+    "title": "My Final Project Template",
+    "section": "Download and clean all required data",
+    "text": "Download and clean all required data\n\nn=20\ndata=data.frame(x=runif(n,-180,180),\n                y=runif(n,-60,60),\n                size = runif(n, 5, 20),\n                category = factor(\n                  sample(letters[1:5], n, replace = TRUE)\n                  ),\n                value = rnorm(n))\n\ndata %&gt;% \n  slice(1:10) %&gt;% #show only 1:n rows\n  kable(digits=2,align=\"c\")%&gt;% #make table and round to two digits\n  kable_styling(bootstrap_options = \n                  c(\"striped\", \"hover\", \"condensed\", \"responsive\")) #apply other formatting\n\n\n\n\nx\ny\nsize\ncategory\nvalue\n\n\n\n\n53.79\n29.32\n12.93\nd\n-1.07\n\n\n-177.87\n-2.22\n6.03\nd\n-0.33\n\n\n26.41\n57.22\n10.30\nd\n0.57\n\n\n-144.87\n-20.38\n19.46\nd\n0.09\n\n\n-39.97\n-19.22\n6.67\nd\n1.36\n\n\n111.60\n56.49\n15.22\nc\n-1.84\n\n\n136.38\n53.60\n12.09\nd\n-0.33\n\n\n30.16\n-50.18\n5.21\nd\n0.28\n\n\n115.04\n-43.30\n15.40\ne\n2.83\n\n\n34.04\n21.68\n8.04\nd\n0.13\n\n\n\n\nAdd any additional processing steps here."
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site\n\n1 + 1\n\n[1] 2"
+  }
+]
