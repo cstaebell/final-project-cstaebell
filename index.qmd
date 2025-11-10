@@ -169,25 +169,7 @@ Add any additional processing steps here.
 
 # Results
 
-\[\~200 words\]
 
-Tables and figures (maps and other graphics) are carefully planned to convey the results of your analysis. Intense exploration and evidence of many trials and failures. The author looked at the data in many different ways before coming to the final presentation of the data.
-
-Show tables, plots, etc. and describe them.
-
-```{r, fig.width=6, fig.height=3, fig.cap="Map of completely random data"}
-m <- leaflet(data) %>% 
-  addTiles() %>% 
-  addCircleMarkers(~x, ~y, radius = ~size,color = ~as.factor(category)) %>% 
-  addPopups(~x[2], ~y[2], "Random popup")
-m  # a map with the default OSM tile layer
-```
-
-```{r}
-data %>% 
-  ggplot(aes(x=x,y=y,col=category))+
-  geom_point()
-```
 
 ### Dygraphs Example
 
@@ -199,10 +181,30 @@ dygraph(nhtemp, main = "New Haven Temperatures") |>
 
 # Conclusions
 
-\[\~200 words\]
 
-Clear summary adequately describing the results and putting them in context. Discussion of further questions and ways to continue investigation.
 
 # References
 
-All sources are cited in a consistent manner
+Bocinsky, R.K., Beaudette, D., Chamberlain, S., Hollister, J., Gustavsen, J. (2025). Package 'FedData'. <https://cran.r-project.org/web/packages/FedData/FedData.pdf>.
+
+Chepesiuk, R. (2009). Missing the dark: health effects of light pollution. Environmental Health Perspectives, 117(1), A20+. <https://www.jstor.org/stable/40066663>.
+
+DarkSky International. (2015). Flagstaff, Arizona. <https://darksky.org/places/flagstaff-arizona-dark-sky-community/>.
+
+DarkSky International. (2025a). About DarkSky. <https://darksky.org/about/#mission>.
+
+DarkSky International (2025b). International Dark Sky Places. <https://darksky.org/what-we-do/international-dark-sky-places/>.
+
+Hunter, T., (2023). The birth of DarkSky (IDA) and a lifelong mission fighting light pollution. DarkSky. <https://darksky.org/news/the-birth-of-ida-and-a-lifelong-mission-fighting-light-pollution/>.
+
+Marty, R., Vicente, G.S. (2025). Package 'blackmarbler'. <https://cran.r-project.org/web/packages/blackmarbler/blackmarbler.pdf>.
+
+NASA. Black Marble. <https://blackmarble.gsfc.nasa.gov/>.
+
+Schultz, J. (2022). States shut out light pollution. National Conference of State Legislatures. <https://www.ncsl.org/environment-and-natural-resources/states-shut-out-light-pollution>
+
+Stare, J., Kyba, C. (2025): Radiance Light Trends. GFZ Data Services. <https://doi.org/10.5880/GFZ.1.4.2019.001>.
+
+Walker, K., Herman, M. (2025). tidycensus: Load US Census Boundary and Attribute Data as 'tidyverse' and 'sf'-Ready Data Frames. R package version 1.7.3, <https://walker-data.com/tidycensus/>.
+
+Weishampel, Z.A., Cheng, W.-H. and Weishampel, J.F. (2016), Sea turtle nesting patterns in Florida vis-à-vis satellite-derived measures of artificial lighting. Remote Sens Ecol Conserv, 2: 59-72. <https://doi.org/10.1002/rse2.12>.
