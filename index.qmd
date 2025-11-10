@@ -165,6 +165,28 @@ clanton <- places(state = "AL", cb = TRUE, year = 2024) |>
 
 ```
 
+```{r download and process local nighttime lights data, warning = F, message = F}
+
+flagstaff_bm <- bm_raster(roi_sf = flagstaff,
+                      product_id = "VNP46A4",
+                      date = c(2012,2016,2020,2024),
+                      bearer = nasa_bearer_token) |> terra::mask(flagstaff)
+
+plot(flagstaff_bm)
+
+# calculate mean normalized radiance
+flagstaff_area_km <- flagstaff$ALAND / 1000^2
+
+flagstaff_rad <- data.frame(values(flagstaff_bm)) |>
+  summarize(across(t2012:t2024, mean, na.rm = TRUE)) |>
+  mutate(area_norm_mean_2012 = t2012/flagstaff_area_km,
+         area_norm_mean_2016 = t2016/flagstaff_area_km,
+         area_norm_mean_2020 = t2020/flagstaff_area_km,
+         area_norm_mean_2024 = t2024/flagstaff_area_km,)
+
+
+```
+
 Add any additional processing steps here.
 
 # Results
@@ -200,6 +222,8 @@ Hunter, T., (2023). The birth of DarkSky (IDA) and a lifelong mission fighting l
 Marty, R., Vicente, G.S. (2025). Package 'blackmarbler'. <https://cran.r-project.org/web/packages/blackmarbler/blackmarbler.pdf>.
 
 NASA. Black Marble. <https://blackmarble.gsfc.nasa.gov/>.
+
+Román, M. O., Wang, Z., Sun, Q., Kalb, V., Miller, S. D., Molthan, A., Schultz, L., Bell, J., Stokes, E. C., Pandey, B., Seto, K. C., Hall, D., Oda, T., Wolfe, R. E., Lin, G., Golpayegani, N., Devadiga, S., Davidson, C., Sarkar, S., Praderas, C., Schmaltz, J., Boller, R., Stevens, J., Ramos González, O. M., Padilla, E., Alonso, J., Detrés, Y., Armstrong, R., Miranda, I., Conte, Y., Marrero, N., MacManus, K., Esch, T., Masuoka, E. J. (2018). NASA's Black Marble nighttime lights product suite. Remote Sensing of Environment, 210: 113-143, <https://doi.org/10.1016/j.rse.2018.03.017>.
 
 Schultz, J. (2022). States shut out light pollution. National Conference of State Legislatures. <https://www.ncsl.org/environment-and-natural-resources/states-shut-out-light-pollution>
 
