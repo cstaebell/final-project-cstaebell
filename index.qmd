@@ -1,7 +1,7 @@
 ---
-title: "My Final Project Template"
+title: "Starry Night?"
+subtitle: An exploration of nighttime lights and the Dark-Sky Movement in the US
 author: Your name here
-subtitle: Subtitle here if desired
 date: today
 date-format: long
 ---
