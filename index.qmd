@@ -95,7 +95,42 @@ ntl_2012_2024 <- bm_extract(roi_sf = states_sf,
 write.csv(ntl_2012_2024, "data/bm_vals_states_2012to2024.csv", row.names = FALSE)
 ```
 
-Population data and local geographies were downloaded from the US Census.
+The following code was used to generate a national nighttime lights figure (embedded below, saved from previous). Further national analysis was planned, but I need to figure out how to store and access the data.
+
+
+```{r plot black marble, eval = F}
+us_2024 <- ggplot() +
+  geom_spatraster(data = log_bm_us[[2]]) + 
+  scale_fill_gradient2(low = "black",
+                       mid = "yellow", 
+                       high = "red",
+                       midpoint = 4.5,
+                       na.value = "transparent") +
+  labs(title = "Nighttime Lights: 2024") +
+  coord_sf() +
+  theme_void() +
+  theme(legend.position = "none")
+  
+
+log_diff_us <- ggplot() +
+  geom_spatraster(data = us_log_diff, aes(fill = log_diff)) + 
+  scale_fill_gradient2(low = "blue",
+                       mid = "gray95",
+                       high = "red",
+                       midpoint = 0,
+                       na.value = "transparent") +
+  labs(title = "Nighttime Lights Log Difference between 2024 and 2012",
+       fill = "Log Difference", subtitle = NULL) +
+  coord_sf() +
+  theme_void()
+
+us_ntl <- us_2024 / log_diff_us 
+
+```
+
+![](data/us_ntl.png)
+
+For case study analyses, population data and local geographies were downloaded from the US Census.
 
 ```{r download census data, warning = F, message = F, output = F}
 
