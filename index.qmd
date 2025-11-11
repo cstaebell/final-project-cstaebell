@@ -26,7 +26,7 @@ Three Dark Sky Certified communities with different sizes and designation dates 
 
 These three communities will each be paired with a community of similar size that has fewer, if any, ordinances controlling light pollution. Each community pair will be examined to see if there are observable differences in nighttime light emissions.
 
-Data are sourced from NASA's Black Marble annual nighttime lights product and the US Census.
+Data are sourced from NASA's Black Marble annual nighttime lights product, MODIS yearly land use/land cover, and the US Census.
 
 
 
@@ -61,7 +61,7 @@ census_api_key <- "ea81e8f86d73c0f7568c2703d4f50df48872b05a"
 
 ## Download and clean all required data
 
-The nighttime lights raster and extracted values for the entire US take a while to download, so I had planned to include the following code which writes the data to files that can be loaded individually. But the files are somewhat large and I broke my original github build when I committed the update containing them. (Maybe there was another issue causing the build failure but the files are larger than recommended for storage in the data folder, anyway.)
+The nighttime lights raster and extracted values for the entire US take a while to download, so I had planned to include the following code which writes the data to files that can be loaded individually. But the files are somewhat large and I broke my original github build when I committed the update containing them. (There was probably another issue causing the build failure but the files are larger than recommended for storage in the data folder, anyway.)
 
 ```{r US Black Marble Data, eval = F}
 # Download and save CONUS black marble data. 
@@ -95,6 +95,7 @@ ntl_2012_2024 <- bm_extract(roi_sf = states_sf,
 write.csv(ntl_2012_2024, "data/bm_vals_states_2012to2024.csv", row.names = FALSE)
 ```
 
+Population data and local geographies were downloaded from the US Census.
 
 ```{r download census data, warning = F, message = F, output = F}
 
@@ -128,6 +129,8 @@ beecave <- places(state = "TX", cb = TRUE, year = 2024) |>
   left_join(us_pop, by = "GEOID")
 
 ```
+
+Cities of similar population size were found for each selected Dark-Sky community. The city selection process focused on states that do not have laws regarding light pollution or dark sky protection, as compiled by Schultz (2022).
 
 ```{r process census data, message = F, output = F}
 
@@ -164,42 +167,155 @@ clanton <- places(state = "AL", cb = TRUE, year = 2024) |>
   st_transform(crs = "epsg:4326")
 
 ```
+There are issues downloading nighttime lights data in real time when rendering. So, I made small raster files of the downloaded black marble data.
 
-```{r download and process local nighttime lights data, warning = F, message = F}
+```{r download and process local nighttime lights data, eval = F}
 
 flagstaff_bm <- bm_raster(roi_sf = flagstaff,
                       product_id = "VNP46A4",
                       date = c(2012,2016,2020,2024),
                       bearer = nasa_bearer_token) |> terra::mask(flagstaff)
 
-plot(flagstaff_bm)
+writeRaster(flagstaff_bm, filename = "data/flagstaff_bm.tif")
+
+scranton_bm <- bm_raster(roi_sf = scranton,
+                      product_id = "VNP46A4",
+                      date = c(2012,2016,2020,2024),
+                      bearer = nasa_bearer_token) |> terra::mask(scranton)
+
+writeRaster(scranton_bm, filename = "data/scranton_bm.tif")
+```
+
+```{r load and process local nighttime lights data, message = F, warning = F}
+
+flagstaff_bm_rast <- rast("data/flagstaff_bm.tif")
+scranton_bm_rast <- rast("data/scranton_bm.tif")
+
+plot(flagstaff_bm_rast)
+plot(scranton_bm_rast)
 
 # calculate mean normalized radiance
 flagstaff_area_km <- flagstaff$ALAND / 1000^2
+scranton_area_km <- scranton$ALAND / 1000^2
 
-flagstaff_rad <- data.frame(values(flagstaff_bm)) |>
+scranton_rad <- data.frame(values(scranton_bm_rast)) |>
   summarize(across(t2012:t2024, mean, na.rm = TRUE)) |>
-  mutate(area_norm_mean_2012 = t2012/flagstaff_area_km,
-         area_norm_mean_2016 = t2016/flagstaff_area_km,
-         area_norm_mean_2020 = t2020/flagstaff_area_km,
-         area_norm_mean_2024 = t2024/flagstaff_area_km,)
+  pivot_longer(cols = t2012:t2024, names_to = "year", values_to = "sc_mean") |>
+  mutate(year = as.integer(sub("t", "", year)),
+         sc_a_norm_mean = sc_mean / scranton_area_km)
 
+flagstaff_rad <- data.frame(values(flagstaff_bm_rast)) |>
+  summarize(across(t2012:t2024, mean, na.rm = TRUE)) |>
+  pivot_longer(cols = t2012:t2024, names_to = "year", values_to = "fs_mean") |>
+  mutate(year = as.integer(sub("t", "", year)),
+         fs_a_norm_mean = fs_mean / flagstaff_area_km)
+
+flagstaff_comp_df <- flagstaff_rad |>
+  select(-fs_mean) |>
+  mutate(sc_a_norm_mean = scranton_rad$sc_a_norm_mean)
+ # ^ huge discrepancy suggests need to also normalize by land use (and maybe population)
 
 ```
 
-Add any additional processing steps here.
+MODIS data was downloaded via AppEEARS. The proportion of land classified as urban and built-up was calculated and applied as a coefficient to the land area, which was then used to normalize the mean radiance. At this point, the analysis was only done for Flagstaff, AZ, and its paired city of Scranton, PA.
+
+
+```{r land use data}
+
+# define land cover descriptions
+Land_Cover_Type_1 <- c(
+  "Water" = 0, "Evergreen Needleleaf forest" = 1, "Evergreen Broadleaf forest" = 2,
+  "Deciduous Needleleaf forest" = 3, "Deciduous Broadleaf forest" = 4, "Mixed forest" = 5,
+  "Closed shrublands" = 6, "Open shrublands" = 7, "Woody savannas" = 8, "Savannas" = 9,
+  "Grasslands" = 10, "Permanent wetlands" = 11, "Croplands" = 12, "Urban & built-up" = 13,
+  "Cropland/Natural vegetation mosaic" = 14, "Snow & ice" = 15, "Barren/Sparsely vegetated" = 16
+)
+
+lcd <- data.frame(
+  ID = Land_Cover_Type_1,
+  landcover = names(Land_Cover_Type_1),
+  stringsAsFactors = FALSE
+)
+
+# calculate urban/built-up area 
+
+fs_lulc <- rast("data/MCD12Q1.061_LC_Type1_doy2024001000000_aid0001-fs.tif") |>
+  crop(flagstaff) |>
+  mask(flagstaff)
+
+levels(fs_lulc) <- lcd
+plot(fs_lulc, main = "Land Use in Flagstaff, AZ")
+
+fs_type_summary <- data.frame(values(fs_lulc)) |>
+  drop_na() |>
+  group_by(landcover) |>
+  summarize(tot_pixels = n())
+
+fs_prop_urban <- fs_type_summary[4,2] / sum(fs_type_summary[,2])
+names(fs_prop_urban) <- "prop_urban"
+
+sc_lulc <- rast("data/MCD12Q1.061_LC_Type1_doy2024001000000_aid0001-sc.tif") |>
+  crop(scranton) |>
+  mask(scranton)
+levels(sc_lulc) <- lcd
+plot(sc_lulc, main = "Land Use in Scranton, PA")
+
+sc_type_summary <- data.frame(values(sc_lulc)) |>
+  drop_na() |>
+  group_by(landcover) |>
+  summarize(tot_pixels = n())
+
+sc_prop_urban <- sc_type_summary[4,2] / sum(sc_type_summary[,2])
+names(sc_prop_urban) <- "prop_urban"
+
+```
+
+The following chunk works locally but will not render; I'm still figuring this out.
+
+```{r land use process2, eval = F}
+
+# calculate mean normalized radiance
+flagstaff_urban_km <- (flagstaff$ALAND * fs_prop_urban / 1000^2)[1,1]
+scranton_urban_km <- (scranton$ALAND * sc_prop_urban / 1000^2)[1,1]
+
+scranton_rad <- data.frame(values(scranton_bm_rast)) |>
+  summarize(across(t2012:t2024, mean, na.rm = TRUE)) |>
+  pivot_longer(cols = t2012:t2024, names_to = "year", values_to = "rad_mean") |>
+  mutate(year = as.integer(sub("t", "", year)),
+         a_norm_mean = rad_mean / scranton_urban_km, 
+         city = "Scranton")
+
+flagstaff_rad <- data.frame(values(flagstaff_bm_rast)) |>
+  summarize(across(t2012:t2024, mean, na.rm = TRUE)) |>
+  pivot_longer(cols = t2012:t2024, names_to = "year", values_to = "rad_mean") |>
+  mutate(year = as.integer(sub("t", "", year)),
+         a_norm_mean = rad_mean / flagstaff_urban_km,
+         city = "Flagstaff")
+
+flagstaff_comp_df <- flagstaff_rad |>
+  bind_rows(scranton_rad)
+
+ggplot(flagstaff_comp_df) +
+  geom_line(aes(x = year, y = a_norm_mean)) +
+  facet_wrap(~ city) +
+  labs(x = "Year", y = "Urban Area Normalized Mean Radiance",
+       title = "Annual Mean Radiance Normalized by Urban Area")
+
+```
+
+# Open questions/further exploration: 
+
+* Look into land use for each year of nighttime lights data, but for now I'm operating under the assumption that land use has not changed significantly between 2012 and 2024.
+
+* Reconsider order of analysis. Instead of taking mean of entire study area and then applying urban area correction, restrict area of interest for nighttime lights data to urban areas, get mean and then normalize by area?
+
+* See if conclusions can be drawn after all cities are processed. This includes looking at the lighting policies in each city. 
+
+* Some cities are switching from orange high pressure sodium lamps to white LEDs. VIIRS spectral range does not completely cover the blue light peak of many modern white LEDs, which can lead to somewhat misleading decreases in satellite-observed radiance.
 
 # Results
 
 
-
-### Dygraphs Example
-
-```{r}
-library(dygraphs)
-dygraph(nhtemp, main = "New Haven Temperatures") |> 
-  dyRangeSelector(dateWindow = c("1920-01-01", "1960-01-01")) 
-```
 
 # Conclusions
 
