@@ -5,7 +5,7 @@ author: Carly Staebell
 date: today
 date-format: long
 ---
-
+ 
 # Introduction
 
 Electric lights have benefited society immensely since their invention in 1879. Modern work, recreation, and transportation are made possible largely due to artificial lighting. However, when artificial outdoor lighting becomes inefficient and unnecessary, it is known as light pollution, with negative impacts on both wildlife and humans (Chepesiuk 2009). 
