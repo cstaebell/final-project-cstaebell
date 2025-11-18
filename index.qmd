@@ -48,6 +48,13 @@ library(patchwork)
 ```
 
 
+```{r keys, echo = F}
+# to be handled better later
+nasa_bearer_token <- "eyJ0eXAiOiJKV1QiLCJvcmlnaW4iOiJFYXJ0aGRhdGEgTG9naW4iLCJzaWciOiJlZGxqd3RwdWJrZXlfb3BzIiwiYWxnIjoiUlMyNTYifQ.eyJ0eXBlIjoiVXNlciIsInVpZCI6ImNzdGFlYmVsbDgiLCJleHAiOjE3NjUxNTUwOTEsImlhdCI6MTc1OTk3MTA5MSwiaXNzIjoiaHR0cHM6Ly91cnMuZWFydGhkYXRhLm5hc2EuZ292IiwiaWRlbnRpdHlfcHJvdmlkZXIiOiJlZGxfb3BzIiwiYWNyIjoiZWRsIiwiYXNzdXJhbmNlX2xldmVsIjozfQ.IQr7UctiPuMVhucTMMTuP2tsBUgoz0P5Arr7u2JnBUKDhLnwjM3ZB6ozNoKK2k0coLKBTbniUV7OTAmzrG3Z1yOCrRdJlpNy9Qt1T-nZQKlJ5BfYvgC_1QkS6R4QNux3OsBibSK0-Rc8rlk3SJqbQl_h-d6iIMSr2vo02ynrNNFtElmV3c9NUGgA0ffaoqYJgDu9GSxH6yevTQ_bXKDtouhz4U52gbybt61_1VOsKNPzj71dkWuXAepMwT5S2AXZLzllKcrt9By_SjSY6UwfZwFzAlsjBNnOf8U0ZfR_9UJ44oxaeeoYE-MJsJQKNUS2vhStDm64zNTMhul0xbnMoA"
+
+census_api_key <- "ea81e8f86d73c0f7568c2703d4f50df48872b05a"
+```
+
 ## Download and clean all required data
 
 The nighttime lights raster and extracted values for the entire US take a while to download, so I had planned to include the following code which writes the data to files that can be loaded individually. But the files are somewhat large and I broke my original github build when I committed the update containing them. (There was probably another issue causing the build failure but the files are larger than recommended for storage in the data folder, anyway.)
