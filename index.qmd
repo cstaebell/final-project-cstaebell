@@ -28,7 +28,6 @@ These three communities will each be paired with a community of similar size tha
 
 Data are sourced from NASA's Black Marble annual nighttime lights product, MODIS yearly land use/land cover, and the US Census.
 
-
 ```{r load packages, message=F, warning=F}
 library(tidyverse)
 library(leaflet)
