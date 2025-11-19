@@ -38,6 +38,9 @@ Data are sourced from NASA's Black Marble annual nighttime lights product, MODIS
 
 
 ```{r load packages}
+#| warning: false
+#| output: false
+
 library(tidyverse)
 library(leaflet)
 library(kableExtra)
