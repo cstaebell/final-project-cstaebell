@@ -5,6 +5,7 @@ author: Carly Staebell
 date: today
 date-format: long
 code-fold: true
+code-tools:
   toggle: true
 execute:
   message: false
