@@ -153,7 +153,7 @@ For case study analyses, population data and local geographies were downloaded f
 ```{r download census data, output = F}
 
 # Download population data
-us_pop <- get_acs(geograph = "place", state = NULL, 
+us_pop <- get_acs(geography = "place", state = NULL, 
                   variables = "B01003_001", key = census_api_key)
 
 az_pop <- get_acs(geography = "place", state = "AZ", 
@@ -304,8 +304,10 @@ fs_type_summary <- data.frame(values(fs_lulc)) |>
   group_by(landcover) |>
   summarize(tot_pixels = n())
 
-fs_prop_urban <- fs_type_summary[4,2] / sum(fs_type_summary[,2])
-names(fs_prop_urban) <- "prop_urban"
+fs_prop_urban <- fs_type_summary |>
+  filter(landcover == "Urban & built-up") |>
+  summarise(prop_urban = tot_pixels / sum(fs_type_summary$tot_pixels)) |>
+  pull(prop_urban)
 
 sc_lulc <- rast("data/MCD12Q1.061_LC_Type1_doy2024001000000_aid0001-sc.tif") |>
   crop(scranton) |>
@@ -318,8 +320,11 @@ sc_type_summary <- data.frame(values(sc_lulc)) |>
   group_by(landcover) |>
   summarize(tot_pixels = n())
 
-sc_prop_urban <- sc_type_summary[4,2] / sum(sc_type_summary[,2])
-names(sc_prop_urban) <- "prop_urban"
+sc_prop_urban <- sc_type_summary |>
+  filter(landcover == "Urban & built-up") |>
+  summarise(prop_urban = tot_pixels / sum(sc_type_summary$tot_pixels)) |>
+  pull(prop_urban)
+
 
 ```
 
