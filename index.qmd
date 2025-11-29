@@ -16,11 +16,11 @@ execute:
 
 # Introduction
 
-Electric lights have benefited society immensely since their invention in 1879. Modern work, recreation, and transportation are made possible largely due to artificial lighting. However, when artificial outdoor lighting becomes inefficient and unnecessary, it is known as light pollution, with negative impacts on both wildlife and humans (Chepesiuk 2009). 
+Electric lights have benefited society immensely since their invention in 1879. Modern work, recreation, and transportation are made possible largely due to artificial lighting. However, when artificial outdoor lighting becomes inefficient and unnecessary, it is known as light pollution, with negative impacts on both wildlife and humans [1]. 
 
-Concerns about the effects of light pollution on astronomy led to the 1988 formation of the nonprofit now known as DarkSky International (Hunter 2023). Since then, DarkSky has grown into a recognized global authority on light pollution with a mission to safeguard communities and wildlife against light pollution (DarkSky 2025a). The organization's International Dark Sky Places program allows communities, parks, and protected areas to seek certification for efforts to preserve and protect their dark skies (DarkSky 2025b). 
+Concerns about the effects of light pollution on astronomy led to the 1988 formation of the nonprofit now known as DarkSky International [2]. Since then, DarkSky has grown into a recognized global authority on light pollution with a mission to safeguard communities and wildlife against light pollution [3]. The organization's International Dark Sky Places program allows communities, parks, and protected areas to seek certification for efforts to preserve and protect their dark skies [4]. 
 
-Notably, Flagstaff, Arizona was the first International Dark Sky Place, designated in 2001. As a hub for astronomical observation, the city has been a leader in outdoor lighting policy since 1958 (Darksky 2015). Other cities, particularly those in the western US, have also recognized the need for measures to combat light pollution, and have achieved DarkSky certification. While certification is certainly not necessary for communities to implement outdoor lighting ordinances and other measures to curb light pollution, it is an indicator of places that have made dark sky conservation a priority. 
+Notably, Flagstaff, Arizona was the first International Dark Sky Place, designated in 2001. As a hub for astronomical observation, the city has been a leader in outdoor lighting policy since 1958 [5]. Other cities, particularly those in the western US, have also recognized the need for measures to combat light pollution, and have achieved DarkSky certification. While certification is certainly not necessary for communities to implement outdoor lighting ordinances and other measures to curb light pollution, it is an indicator of places that have made dark sky conservation a priority. 
 
 This project aims to explore trends in nighttime light levels first from a national contiguous US perspective, and through more detailed case studies of individual cities. 
 
@@ -62,9 +62,57 @@ library(piggyback)
 
 ## Download and clean all required data
 
-The nighttime lights raster and extracted values for the entire US take a while to download, so I had planned to include the following code which writes the data to files that can be loaded individually. But the files are somewhat large and I broke my original github build when I committed the update containing them. (There was probably another issue causing the build failure but the files are larger than recommended for storage in the data folder, anyway.)
+### National Nighttime Lights
 
-```{r Download and process CONUS data}
+NASA black marble annual data for 2014 through 2024 were downloaded and saved in a separate script ('black_marble_data_download.R'). The 2024 nighttime lights across the contiguous US are visualized below. 
+```{r Download 2024 national raster}
+#| warning: false
+#| output: false
+
+# Define national spatial extent
+nonconus <- c("Guam", "Hawaii", "Alaska",
+              "Commonwealth of the Northern Mariana Islands",
+              "United States Virgin Islands", "American Samoa", "Puerto Rico")
+
+states_sf <- states() |>
+  filter(!NAME %in% nonconus) |>
+  select(NAME, geometry) |>
+  st_transform(crs = "epsg:4326")
+
+conus <- st_union(states_sf)|>
+  st_as_sf()
+
+# Read in national data for 2024 (to be used for leaflet map later)
+pb_download("US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_t2024.tif", 
+            repo = "cstaebell/final-project-cstaebell")
+
+us_2024_rast <- rast("US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_t2024.tif") |>
+  mask(conus)
+```
+
+```{r Plot national raster}
+#| warning: false
+
+log_us_2024 <- app(us_2024_rast, fun = log1p)
+
+ggplot() +
+  geom_spatraster(data = log_us_2024) + 
+  scale_fill_gradient2(low = "black",
+                       mid = "yellow", 
+                       high = "red",
+                       midpoint = 4.5,
+                       na.value = "transparent") +
+  labs(title = "Nighttime Lights: 2024") +
+  coord_sf() +
+  theme_void() +
+  theme(legend.position = "none")
+```
+
+Mean nighttime light radiance for the entire contiguous US is plotted below, where a generally increasing trend can be observed over the past ten years.
+ 
+```{r Download and process CONUS data from GitHub Releases}
+#| warning: false
+  
 years = 2014:2024
 conus_means = numeric(length(years))
 
@@ -78,82 +126,82 @@ for (i in 1:length(years)) {
   conus_means[i] <- annual_mean
 }
 
-plot(years, conus_means)
+conus_df <- data.frame(year = years, mean_ntl = conus_means)
+
+ggplot(conus_df) +
+  geom_point(aes(x = year, y = mean_ntl)) +
+  geom_smooth(aes(x = year, y = mean_ntl)) +
+  labs(x = "Year", y = expression("Mean Radiance (nW cm"^-2~"sr"^-1*")"),
+       title = "Annual US Mean Radiance (2014 - 2024)") +
+  theme_light()
 ```
+Getting more granular, we can look at state means.
 
-```{r US Black Marble Data, eval = F}
-# Download and save CONUS black marble data. 
+```{r Process annual state NTL data}
+#| warning: false
+#| output: false
 
-# Define region of interest
-nonconus <- c("Guam", "Hawaii", "Alaska",
-              "Commonwealth of the Northern Mariana Islands",
-              "United States Virgin Islands", "American Samoa", "Puerto Rico")
-states_sf <- states() |>
-  filter(!NAME %in% nonconus) |>
-  select(NAME, geometry) |>
-  st_transform(crs = "epsg:4326") # EPSG:4326 for compatibility with black marble
+state_means <- matrix(nrow = 49, ncol = length(years))
+state_pixels <- matrix(nrow = 49, ncol = length(years))
 
-# Nighttime lights annual data (black marble)
-bm_annual <- bm_raster(roi_sf = states_sf,
-                      product_id = "VNP46A4",
-                      date = c(2012,2024),
-                      bearer = nasa_bearer_token) |> terra::mask(states_sf)
-
-writeRaster(bm_annual, filename = "data/blackmarble_us_2012_2024.tif")
-
-# Create log transformed version for mapping
-app(bm_annual, fun = log1p, filename = "data/log_blackmarble_us_2012_2024.tif", overwrite = TRUE)
-
-# values
-ntl_2012_2024 <- bm_extract(roi_sf = states_sf,
-                         product_id = "VNP46A4",
-                         date = 2012:2024, 
-                         bearer = nasa_bearer_token)
-
-write.csv(ntl_2012_2024, "data/bm_vals_states_2012to2024.csv", row.names = FALSE)
-```
-
-The following code was used to generate a national nighttime lights figure (embedded below, saved from previous). Further national analysis was planned, but I need to figure out how to store and access the data.
-
-
-```{r plot black marble, eval = F}
-us_2024 <- ggplot() +
-  geom_spatraster(data = log_bm_us[[2]]) + 
-  scale_fill_gradient2(low = "black",
-                       mid = "yellow", 
-                       high = "red",
-                       midpoint = 4.5,
-                       na.value = "transparent") +
-  labs(title = "Nighttime Lights: 2024") +
-  coord_sf() +
-  theme_void() +
-  theme(legend.position = "none")
+# Read in annual data for states and create a single data frame
+for (i in 1:length(years)) {
+  pb_download(paste("US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_mean_t",
+                             years[i], ".Rds", sep = ""), repo = "cstaebell/final-project-cstaebell")
+  annual_mean <- readRDS(paste("US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_mean_t",
+                             years[i], ".Rds", sep = ""))
   
+  state_means[,i] <- annual_mean[,2]
+  state_pixels[,i] <- annual_mean[,3]
+  
+  # check that state names are ordered the same way for each year
+  if (i == 1) {
+    state_names <- annual_mean[,1]
+  } else {
+    if (sum(state_names != annual_mean[,1]) != 0) {
+      print("Different state names")
+    }
+  }
+}
 
-log_diff_us <- ggplot() +
-  geom_spatraster(data = us_log_diff, aes(fill = log_diff)) + 
-  scale_fill_gradient2(low = "blue",
-                       mid = "gray95",
-                       high = "red",
-                       midpoint = 0,
-                       na.value = "transparent") +
-  labs(title = "Nighttime Lights Log Difference between 2024 and 2012",
-       fill = "Log Difference", subtitle = NULL) +
-  coord_sf() +
-  theme_void()
+state_means_df <- data.frame(state_means)
+colnames(state_means_df) <- paste("ntl_", years, sep = "")
+state_means_df <- state_means_df |>
+  mutate(state = state_names, 
+         pct_change = (ntl_2024 - ntl_2014) / ntl_2014 * 100)
 
-us_ntl <- us_2024 / log_diff_us 
 
+# Combine NTL data with geographic data
+states_ntl <- state_means_df |>
+  inner_join(states_sf, by = c("state" = "NAME"))
+
+states_ntl <- states_sf |>
+  inner_join(state_means_df, by = c("NAME" = "state"))
 ```
 
-![](data/us_ntl.png)
+
+```{r national choropleths}
+# Create choropleths
+st_2024_mean_map <- ggplot() +
+  geom_sf(data = filter(states_ntl, NAME != "District of Columbia"), aes(fill = ntl_2024)) +
+  labs(title = "Mean Annual Nighttime Lights by State, 2024")
+
+st_pct_change_map <- ggplot() + 
+  geom_sf(data = states_ntl, aes(fill = pct_change))
+
+st_2024_mean_map / st_pct_change_map
+```
+
+
+### Case Studies 
 
 For case study analyses, population data and local geographies were downloaded from the US Census.
 
-```{r download census data, output = F}
+```{r Download census data}
+#| output: false
 
 # Download population data
-us_pop <- get_acs(geograph = "place", state = NULL, 
+us_pop <- get_acs(geography = "place", state = NULL, 
                   variables = "B01003_001", key = census_api_key)
 
 az_pop <- get_acs(geography = "place", state = "AZ", 
@@ -183,9 +231,10 @@ beecave <- places(state = "TX", cb = TRUE, year = 2024) |>
 
 ```
 
-Cities of similar population size were found for each selected Dark-Sky community. The city selection process focused on states that do not have laws regarding light pollution or dark sky protection, as compiled by Schultz (2022).
+Cities of similar population size were found for each selected Dark-Sky community. The city selection process focused on states that do not have laws regarding light pollution or dark sky protection, as compiled by Schultz [6].
 
-```{r process census data, output = F}
+```{r Process census data}
+#| output: false
 
 # Find suitable comparison cities
 flagstaff_sim_pop <- us_pop |> filter(estimate >= (flagstaff$estimate - 0.01*flagstaff$estimate) 
@@ -220,32 +269,105 @@ clanton <- places(state = "AL", cb = TRUE, year = 2024) |>
   st_transform(crs = "epsg:4326")
 
 ```
-There are issues downloading nighttime lights data in real time when rendering. So, I made small raster files of the downloaded black marble data.
+
+
+```{r Read in yearly national raster data}
+# Subset rasters to each area 
+cities <- list(flagstaff, homerglen, beecave, scranton, belvidere, clanton)
+city_rasters <- vector("list", length = length(cities))
+
+# Load files for each year
+for (i in 1:length(years)){
+  pb_download(paste("US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_t", 
+                     years[i], ".tif", sep = ""), repo = "cstaebell/final-project-cstaebell")
+  rast_file <- paste("US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_t", 
+                     years[i], ".tif", sep = "")
+  
+  year_rast <- rast(rast_file)
+  
+  # Loop over cities
+  for (j in 1:length(cities)) {
+    # Crop and mask to city extent
+    current_rast <- year_rast |>
+      terra::crop(cities[[j]]) |>
+      mask(cities[[j]])
+    
+    # Create list entry during first iteration, then append in subsequent iterations
+    if (i == 1) {
+    city_rasters[[j]] <- list(current_rast)
+    } else {
+    city_rasters[[j]][[length(city_rasters[[j]]) + 1]] <- current_rast
+    }
+  }
+}
+
+# Stack city lists 
+city_rasters <- lapply(city_rasters, rast)
+
+# Create separate rasters for each city
+city_var_names <- paste0(c("flagstaff", "homerglen", "beecave", "scranton", 
+                           "belvidere", "clanton"), "_rast")
+for (c in 1:length(city_var_names)) {
+  assign(city_var_names[c], city_rasters[[c]])
+}
+
+# Calculate annual means
+annual_means <- vector("list", length = length(cities))
+for (i in 1:length(city_rasters)) {
+  ntl_vals <- data.frame(values(city_rasters[[i]])) |>
+    summarize(across(t2014:t2024, ~ mean(.x, na.rm = TRUE)))
+  
+  annual_means[[i]] <- ntl_vals
+}
+
+# Create mean dataframes for each city
+city_df_var_names <- paste0(c("flagstaff", "homerglen", "beecave", "scranton", 
+                           "belvidere", "clanton"), "_means")
+for (i in 1:length(annual_means)) {
+  df <- annual_means[[i]] |>
+    pivot_longer(cols = t2014:t2024) |>
+    mutate(name = years) |>
+    rename(year = name, mean_ntl = value)
+  
+  assign(city_df_var_names[i], df)
+}
+
+```
+
+
+Simply looking at annual means for each city is more of a proxy for overall development than it is for lighting policy. Therefore, we need to look at land use and only compare the urban and built-up areas. 
+
+```{r compare cities}
+# Annual means
+fs_means <- ggplot() +
+  geom_line(data = flagstaff_means, aes(x = year, y = mean_ntl), color = "blue") +
+  geom_line(data = scranton_means, aes(x = year, y = mean_ntl), color = "red") +
+  labs(x = "Year", y = "Mean NTL", title = "Flagstaff and Scranton Annual Mean Nighttime Lights")
+
+hb_means <- ggplot() +
+  geom_line(data = homerglen_means, aes(x = year, y = mean_ntl), color = "blue") +
+  geom_line(data = belvidere_means, aes(x = year, y = mean_ntl), color = "red") +
+  labs(x = "Year", y = "Mean NTL", title = "Homer Glen and Belvidere Annual Mean Nighttime Lights")
+
+bc_means <- ggplot() +
+  geom_line(data = beecave_means, aes(x = year, y = mean_ntl), color = "blue") +
+  geom_line(data = clanton_means, aes(x = year, y = mean_ntl), color = "red") +
+  labs(x = "Year", y = "Mean NTL", title = "Bee Cave and Clanton Annual Mean Nighttime Lights")
+
+fs_means + hb_means + bc_means
+
+```
 
 ```{r download and process local nighttime lights data, eval = F}
 
-flagstaff_bm <- bm_raster(roi_sf = flagstaff,
-                      product_id = "VNP46A4",
-                      date = c(2012,2016,2020,2024),
-                      bearer = nasa_bearer_token) |> terra::mask(flagstaff)
 
-writeRaster(flagstaff_bm, filename = "data/flagstaff_bm.tif")
 
-scranton_bm <- bm_raster(roi_sf = scranton,
-                      product_id = "VNP46A4",
-                      date = c(2012,2016,2020,2024),
-                      bearer = nasa_bearer_token) |> terra::mask(scranton)
 
-writeRaster(scranton_bm, filename = "data/scranton_bm.tif")
-```
 
-```{r load and process local nighttime lights data, warning = F}
 
-flagstaff_bm_rast <- rast("data/flagstaff_bm.tif")
-scranton_bm_rast <- rast("data/scranton_bm.tif")
 
-plot(flagstaff_bm_rast)
-plot(scranton_bm_rast)
+
+
 
 # calculate mean normalized radiance
 flagstaff_area_km <- flagstaff$ALAND / 1000^2
@@ -256,19 +378,8 @@ scranton_rad <- data.frame(values(scranton_bm_rast)) |>
   pivot_longer(cols = t2012:t2024, names_to = "year", values_to = "sc_mean") |>
   mutate(year = as.integer(sub("t", "", year)),
          sc_a_norm_mean = sc_mean / scranton_area_km)
-
-flagstaff_rad <- data.frame(values(flagstaff_bm_rast)) |>
-  summarize(across(t2012:t2024, mean, na.rm = TRUE)) |>
-  pivot_longer(cols = t2012:t2024, names_to = "year", values_to = "fs_mean") |>
-  mutate(year = as.integer(sub("t", "", year)),
-         fs_a_norm_mean = fs_mean / flagstaff_area_km)
-
-flagstaff_comp_df <- flagstaff_rad |>
-  select(-fs_mean) |>
-  mutate(sc_a_norm_mean = scranton_rad$sc_a_norm_mean)
- # ^ huge discrepancy suggests need to also normalize by land use (and maybe population)
-
 ```
+
 
 MODIS data was downloaded via AppEEARS. The proportion of land classified as urban and built-up was calculated and applied as a coefficient to the land area, which was then used to normalize the mean radiance. At this point, the analysis was only done for Flagstaff, AZ, and its paired city of Scranton, PA.
 

@@ -49,6 +49,8 @@ bm_extract(roi_sf = states_sf,
            file_prefix = "US_",
            file_return_null = TRUE)
 
+years = 2014:2024
+
 # Get rasters for states
 for (year in years){
   bm_raster(roi_sf = states_sf,
@@ -61,10 +63,20 @@ for (year in years){
             file_return_null = TRUE)
 }
 
-# Upload CONUS means to GitHub Releases
+# Upload data to GitHub Releases
 for (year in years){
   piggyback::pb_upload(paste("data-local/CONUS_VNP46A4_NearNadir_Composite_Snow_Free_qflag_mean_t",
                              year, ".Rds", sep = ""),
+                       repo = "cstaebell/final-project-cstaebell",
+                       tag = "v0")
+
+  piggyback::pb_upload(paste("data-local/US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_mean_t",
+                             year, ".Rds", sep = ""),
+                       repo = "cstaebell/final-project-cstaebell",
+                       tag = "v0")
+
+  piggyback::pb_upload(paste("data-local/US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_t",
+                             year, ".tif", sep = ""),
                        repo = "cstaebell/final-project-cstaebell",
                        tag = "v0")
 }
