@@ -15,6 +15,7 @@ library(tigris)
 library(terra)
 library(piggyback)
 
+
 # Define region of interest
 nonconus <- c("Guam", "Hawaii", "Alaska",
               "Commonwealth of the Northern Mariana Islands",
@@ -65,18 +66,40 @@ for (year in years){
 
 # Upload data to GitHub Releases
 for (year in years){
-  piggyback::pb_upload(paste("data-local/CONUS_VNP46A4_NearNadir_Composite_Snow_Free_qflag_mean_t",
+  pb_upload(paste("data-local/CONUS_VNP46A4_NearNadir_Composite_Snow_Free_qflag_mean_t",
                              year, ".Rds", sep = ""),
                        repo = "cstaebell/final-project-cstaebell",
                        tag = "v0")
 
-  piggyback::pb_upload(paste("data-local/US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_mean_t",
+  pb_upload(paste("data-local/US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_mean_t",
                              year, ".Rds", sep = ""),
                        repo = "cstaebell/final-project-cstaebell",
                        tag = "v0")
 
-  piggyback::pb_upload(paste("data-local/US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_t",
+  pb_upload(paste("data-local/US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_t",
                              year, ".tif", sep = ""),
                        repo = "cstaebell/final-project-cstaebell",
                        tag = "v0")
 }
+
+# MODIS Land cover data
+# Downloaded from AppEEARS
+for (year in years){
+  pb_upload(paste("data-local/MCD12Q1.061_LC_Type1_doy", year, "001000000_aid0001.tif",
+                  sep = ""),
+          repo = "cstaebell/final-project-cstaebell",
+          tag = "v0")
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
