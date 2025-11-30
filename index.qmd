@@ -18,15 +18,9 @@ execute:
 
 Electric lights have benefited society immensely since their invention in 1879. Modern work, recreation, and transportation are made possible largely due to artificial lighting. However, when artificial outdoor lighting becomes inefficient and unnecessary, it is known as light pollution, with negative impacts on both wildlife and humans [1]. 
 
-Concerns about the effects of light pollution on astronomy led to the 1988 formation of the nonprofit now known as DarkSky International [2]. Since then, DarkSky has grown into a recognized global authority on light pollution with a mission to safeguard communities and wildlife against light pollution [3]. The organization's International Dark Sky Places program allows communities, parks, and protected areas to seek certification for efforts to preserve and protect their dark skies [4]. 
+Concerns about the impacts of light pollution on observational astronomy led to the 1988 formation of the nonprofit now known as DarkSky International [2]. Since then, DarkSky has grown into a recognized global authority on light pollution with a mission to safeguard communities and wildlife against light pollution [3]. The organization's International Dark Sky Places program allows communities, parks, and protected areas to seek certification for efforts to preserve and protect their dark skies [4]. While many communities implement outdoor lighting policies without seeking recognition, a DarkSky certification is an indicator of places that have made dark sky conservation a priority.  
 
-Notably, Flagstaff, Arizona was the first International Dark Sky Place, designated in 2001. As a hub for astronomical observation, the city has been a leader in outdoor lighting policy since 1958 [5]. Other cities, particularly those in the western US, have also recognized the need for measures to combat light pollution, and have achieved DarkSky certification. While certification is certainly not necessary for communities to implement outdoor lighting ordinances and other measures to curb light pollution, it is an indicator of places that have made dark sky conservation a priority. 
-
-This project aims to explore trends in nighttime light levels first from a national contiguous US perspective, and through more detailed case studies of individual cities. 
-
-# Materials and methods
-
-Three Dark Sky Certified communities with different sizes and designation dates have been selected: 
+This project aims to explore trends in nighttime light levels first from a national contiguous US perspective, and through more detailed case studies of individual cities. Three DarkSky certified communities [4] with different sizes and designation dates have been selected: 
 
 * Flagstaff, Arizona: Population ~77,000, designated 2001;
 * Homer Glen, Illinois: Population ~25,000, designated 2011;
@@ -34,8 +28,17 @@ Three Dark Sky Certified communities with different sizes and designation dates 
 
 These three communities will each be paired with a community of similar size that has fewer, if any, ordinances controlling light pollution. Each community pair will be examined to see if there are observable differences in nighttime light emissions.
 
-Data are sourced from NASA's Black Marble annual nighttime lights product, MODIS yearly land use/land cover, and the US Census.
 
+# Materials and methods
+
+The following data were used. 
+
+* NASA's Black Marble annual nighttime lights (VNP46A4 data product) [5] sourced via the *blackmarbler* R package [6] 
+  + Spatial resolution: 500 m
+* US Census Bureau TIGER data [7] sourced via the *tigris* R package [8]
+* US Census Bureau American Community Survey (ACS) population data [9] sourced via the *tidycensus* R package [10]
+* MODIS Type 1 yearly land use/land cover (MCD12Q1 data product) sourced via AppEEARS [11]
+  + Spatial resolution: 500 m
 
 ```{r load packages}
 #| warning: false
@@ -59,12 +62,12 @@ library(patchwork)
 library(piggyback)
 ```
 
-
 ## Download and clean all required data
 
-### National Nighttime Lights
+### National and statewide nighttime lights
 
-NASA black marble annual data for 2014 through 2024 were downloaded and saved in a separate script ('black_marble_data_download.R'). The 2024 nighttime lights across the contiguous US are visualized below. 
+A US Census TIGER shapefile was downloaded to provide geographic state boundaries. A separate script was used to download and save annual nighttime lights data for the contiguous US ('black_marble_data_download.R'). Raster data was downloaded for plotting purposes, and extracted mean nighttime lights values were also downloaded for analysis. Nighttime lights are radiance values with units of $\frac{n W}{cm^2 sr}$.
+
 ```{r Download 2024 national raster}
 #| warning: false
 #| output: false
@@ -79,40 +82,23 @@ states_sf <- states() |>
   select(NAME, geometry) |>
   st_transform(crs = "epsg:4326")
 
+# Dissolve individual state boundaries to get CONUS outline
 conus <- st_union(states_sf)|>
   st_as_sf()
 
-# Read in national data for 2024 (to be used for leaflet map later)
+## Read in national raster data for 2024 (to be used for leaflet map later)
 pb_download("US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_t2024.tif", 
             repo = "cstaebell/final-project-cstaebell")
 
 us_2024_rast <- rast("US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_t2024.tif") |>
   mask(conus)
-```
 
-```{r Plot national raster}
-#| warning: false
-
+# create log transformed version for plotting
 log_us_2024 <- app(us_2024_rast, fun = log1p)
 
-ggplot() +
-  geom_spatraster(data = log_us_2024) + 
-  scale_fill_gradient2(low = "black",
-                       mid = "yellow", 
-                       high = "red",
-                       midpoint = 4.5,
-                       na.value = "transparent") +
-  labs(title = "Nighttime Lights: 2024") +
-  coord_sf() +
-  theme_void() +
-  theme(legend.position = "none")
-```
-
-Mean nighttime light radiance for the entire contiguous US is plotted below, where a generally increasing trend can be observed over the past ten years.
- 
-```{r Download and process CONUS data from GitHub Releases}
-#| warning: false
-  
+#---
+# Download and process annual US mean NTL data
+#---
 years = 2014:2024
 conus_means = numeric(length(years))
 
@@ -128,23 +114,12 @@ for (i in 1:length(years)) {
 
 conus_df <- data.frame(year = years, mean_ntl = conus_means)
 
-ggplot(conus_df) +
-  geom_point(aes(x = year, y = mean_ntl)) +
-  geom_smooth(aes(x = year, y = mean_ntl)) +
-  labs(x = "Year", y = expression("Mean Radiance (nW cm"^-2~"sr"^-1*")"),
-       title = "Annual US Mean Radiance (2014 - 2024)") +
-  theme_light()
-```
-Getting more granular, we can look at state means.
-
-```{r Process annual state NTL data}
-#| warning: false
-#| output: false
-
+#---
+# Download and process mean NTL data for states
+#---
 state_means <- matrix(nrow = 49, ncol = length(years))
-state_pixels <- matrix(nrow = 49, ncol = length(years))
 
-# Read in annual data for states and create a single data frame
+# Read in annual data for states and create a matrix of state means
 for (i in 1:length(years)) {
   pb_download(paste("US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_mean_t",
                              years[i], ".Rds", sep = ""), repo = "cstaebell/final-project-cstaebell")
@@ -152,8 +127,7 @@ for (i in 1:length(years)) {
                              years[i], ".Rds", sep = ""))
   
   state_means[,i] <- annual_mean[,2]
-  state_pixels[,i] <- annual_mean[,3]
-  
+
   # check that state names are ordered the same way for each year
   if (i == 1) {
     state_names <- annual_mean[,1]
@@ -164,6 +138,7 @@ for (i in 1:length(years)) {
   }
 }
 
+# Create data frame of state means and add percent change column
 state_means_df <- data.frame(state_means)
 colnames(state_means_df) <- paste("ntl_", years, sep = "")
 state_means_df <- state_means_df |>
@@ -171,39 +146,25 @@ state_means_df <- state_means_df |>
          pct_change = (ntl_2024 - ntl_2014) / ntl_2014 * 100)
 
 
-# Combine NTL data with geographic data
-states_ntl <- state_means_df |>
-  inner_join(states_sf, by = c("state" = "NAME"))
-
+# Combine state NTL data with geographic data
 states_ntl <- states_sf |>
   inner_join(state_means_df, by = c("NAME" = "state"))
 ```
 
 
-```{r national choropleths}
-# Create choropleths
-st_2024_mean_map <- ggplot() +
-  geom_sf(data = filter(states_ntl, NAME != "District of Columbia"), aes(fill = ntl_2024)) +
-  labs(title = "Mean Annual Nighttime Lights by State, 2024")
-
-st_pct_change_map <- ggplot() + 
-  geom_sf(data = states_ntl, aes(fill = pct_change))
-
-st_2024_mean_map / st_pct_change_map
-```
-
-
 ### Case Studies 
 
-For case study analyses, population data and local geographies were downloaded from the US Census.
+For case study analyses, population data and local geographies for each Dark Sky Place were downloaded from the US Census.
 
 ```{r Download census data}
 #| output: false
 
 # Download population data
+# US population to search for companion cities
 us_pop <- get_acs(geography = "place", state = NULL, 
                   variables = "B01003_001", key = census_api_key)
 
+# State populations for the states in which the selected DarksKy communities reside
 az_pop <- get_acs(geography = "place", state = "AZ", 
                          variables = "B01003_001", key = census_api_key)
 
@@ -231,14 +192,14 @@ beecave <- places(state = "TX", cb = TRUE, year = 2024) |>
 
 ```
 
-Cities of similar population size were found for each selected Dark-Sky community. The city selection process focused on states that do not have laws regarding light pollution or dark sky protection, as compiled by Schultz [6].
+Candidate cities to pair with each selected Dark Sky community were found by filtering US ACS population data to return a listing of municipalities with populations within 1% of each Dark Sky community population. Final comparison cities were selected based on population match and state. Preference was given to cities within states that are not known to have laws regarding light pollution or dark sky protection, as compiled by Schultz [12].
 
-```{r Process census data}
+```{r Process Census data}
 #| output: false
 
-# Find suitable comparison cities
-flagstaff_sim_pop <- us_pop |> filter(estimate >= (flagstaff$estimate - 0.01*flagstaff$estimate) 
-                                & estimate <= (flagstaff$estimate + 0.01*flagstaff$estimate)) |>
+# Get listing of suitable comparison cities
+flagstaff_sim_pop <- us_pop |> filter(estimate >= (flagstaff$estimate - 0.005*flagstaff$estimate) 
+                                & estimate <= (flagstaff$estimate + 0.005*flagstaff$estimate)) |>
   separate(NAME, into = c("city", "state"), sep = ", ")
 
 homerglen_sim_pop <- us_pop |> filter(estimate >= (homerglen$estimate - 0.005*homerglen$estimate) 
@@ -270,9 +231,23 @@ clanton <- places(state = "AL", cb = TRUE, year = 2024) |>
 
 ```
 
-Process nighttime lights rasters for each study area. 
+The final city pairs are as follows:
+
+| Pair | Community | Population | 
+|------|-----------|------------|
+| 1 | Flagstaff, AZ | `r format(flagstaff$estimate, big.mark = ",", scientific = FALSE)` |
+| 1 | Scranton, PA | `r format(scranton$estimate, big.mark = ",", scientific = FALSE)` |
+| 2 | Homer Glen, IL | `r format(homerglen$estimate, big.mark = ",", scientific = FALSE)` |
+| 2 | Belvidere, IL | `r format(belvidere$estimate, big.mark = ",", scientific = FALSE)` |
+| 3 | Bee Cave, TX | `r format(beecave$estimate, big.mark = ",", scientific = FALSE)` |
+| 3 | Clanton, AL | `r format(clanton$estimate, big.mark = ",", scientific = FALSE)` |
+
+
+The annual US nighttime lights rasters were then subsetted to create a raster and dataframe of mean values for each city. 
 
 ```{r Read in yearly national raster data}
+#| output: false
+
 # Subset rasters to each area 
 cities <- list(flagstaff, homerglen, beecave, scranton, belvidere, clanton)
 city_rasters <- vector("list", length = length(cities))
@@ -305,7 +280,7 @@ for (i in 1:length(years)){
 # Stack city lists 
 city_rasters <- lapply(city_rasters, rast)
 
-# Create separate rasters for each city -- delete this?
+# Create separate rasters for each city 
 city_var_names <- paste0(c("flagstaff", "homerglen", "beecave", "scranton", 
                            "belvidere", "clanton"), "_rast")
 for (c in 1:length(city_var_names)) {
@@ -337,7 +312,117 @@ for (i in 1:length(annual_means)) {
 ```
 
 
-Simply looking at annual means for each city may be more of a proxy for overall development than it is for lighting policy. Therefore, we need to look at land use and only compare the urban/built-up areas. 
+However, simply looking at annual radiance means for each city may be more of a proxy for overall development or population density than for lighting policy. Land use/land cover data can be used to help make comparisons across communities more meaningful. 
+
+Although land cover changes over the period from 2014 to 2024, for the purposes of this project, only one year of land cover data was considered for each community. Data availability is one reason for this simplification -- annual data is not available for all study areas for all years, and the MODIS science team urges caution when using land cover layers for 2021 and beyond due to lack of updates to the classification training database [11]. Therefore, 2019 data was used for all cities except for Clanton, which used 2020 data.
+
+Land cover rasters were downloaded and cropped to each city. The urban areas in each city were identified, and then annual mean nighttime lights values were calculated for that urban area.
+
+```{r Urban areas}
+# Download land cover data from GitHub Release
+pb_download("MCD12Q1.061_LC_Type1_doy2019001000000_aid0001.tif", 
+            repo = "cstaebell/final-project-cstaebell")
+pb_download("MCD12Q1.061_LC_Type1_doy2020001000000_aid0001.tif", 
+            repo = "cstaebell/final-project-cstaebell")
+land_use_rast_2019 <- rast("MCD12Q1.061_LC_Type1_doy2019001000000_aid0001.tif")
+land_use_rast_2020 <- rast("MCD12Q1.061_LC_Type1_doy2020001000000_aid0001.tif")
+
+# Subset land cover rasters to each city
+city_ntl_rasters <- list(flagstaff_rast, homerglen_rast, beecave_rast, scranton_rast, 
+                           belvidere_rast, clanton_rast)
+land_use_rasters <- vector("list", length = length(cities))
+urban_ntl_dfs <- vector("list", length = length(cities))
+
+for (i in 1:length(cities)) {
+  # Specify which data to use (2019 for all cities but Clanton)
+  if (i == 6) {
+    land_use_rast <- land_use_rast_2020
+  } else {
+    land_use_rast <- land_use_rast_2019
+  }
+  
+  # Crop and mask to city extent
+  current_rast <- land_use_rast |>
+    terra::crop(cities[[i]]) |>
+    mask(cities[[i]])
+  # Save to list for future use 
+  land_use_rasters[[i]] <- current_rast
+  
+  # Mask all but urban land use (land use code = 13)
+  urban_area <- current_rast
+  urban_area[urban_area != 13] <- NA
+  city_urban <- city_ntl_rasters[[i]] |>
+    mask(urban_area) 
+  
+  # Calculate mean NTL for urban areas 
+  urban_ntl_dfs[[i]] <- data.frame(values(city_urban)) |>
+    summarize(across(t2014:t2024, ~ mean(.x, na.rm = TRUE))) |>
+    pivot_longer(cols = t2014:t2024) |>
+    mutate(name = years) |>
+    rename(year = name, mean_urban_ntl = value)
+}
+
+# Create separate dataframes from list object
+urban_ntl_var_names <- paste0(c("flagstaff", "homerglen", "beecave", "scranton", 
+                           "belvidere", "clanton"), "_urban_ntl")
+
+for (i in 1:length(urban_ntl_dfs)) {
+  assign(urban_ntl_var_names[i], urban_ntl_dfs[[i]])
+}
+```
+
+
+# Results
+
+## National Trends
+
+The 2024 nighttime lights across the contiguous US are visualized below. 
+
+```{r Plot national raster of ntl}
+#| warning: false
+
+ggplot() +
+  geom_spatraster(data = log_us_2024) + 
+  scale_fill_gradient2(low = "black",
+                       mid = "yellow", 
+                       high = "red",
+                       midpoint = 4.5,
+                       na.value = "transparent") +
+  labs(title = "Nighttime Lights: 2024") +
+  coord_sf() +
+  theme_void() +
+  theme(legend.position = "none")
+```
+
+
+Mean nighttime light radiance for the entire contiguous US is plotted below, where a generally increasing trend can be observed over the past ten years.
+ 
+```{r Plot CONUS mean radiance vs year}
+#| warning: false
+  
+ggplot(conus_df) +
+  geom_point(aes(x = year, y = mean_ntl)) +
+  geom_smooth(aes(x = year, y = mean_ntl)) +
+  labs(x = "Year", y = expression("Mean Radiance (nW cm"^-2~"sr"^-1*")"),
+       title = "Annual US Mean Radiance (2014 - 2024)") +
+  theme_light()
+```
+
+National choropleth maps:
+
+```{r national choropleths}
+# Create choropleths
+st_2024_mean_map <- ggplot() +
+  geom_sf(data = filter(states_ntl, NAME != "District of Columbia"), aes(fill = ntl_2024)) +
+  labs(title = "Mean Annual Nighttime Lights by State, 2024")
+
+st_pct_change_map <- ggplot() + 
+  geom_sf(data = states_ntl, aes(fill = pct_change))
+
+st_2024_mean_map / st_pct_change_map
+```
+
+Annual means line plots:
 
 ```{r compare city annual means}
 # Annual means
@@ -360,64 +445,6 @@ fs_means + hb_means + bc_means
 
 ```
 
-Bring in land use data and calculate mean urban nighttime lights for each city. Land use for the year 2019 was selected for all cities as a compromise. Although land use does change from 2014 to 2024, the amount of developed area, which we are interested in, does not appear to change drastically. Further, land use data was not available for all cities for all years of interest, but 2019 data is available and represents a halfway point in the timeframe of interest. Clanton does not have 2019 data, so 2020 is used instead.
-
-- Combined MODIS Land Cover Type MCD12Q1.061 Yearly
-- Selected layers: LC_Prop1, LC_Prop2, LC_Type1, 
-- Geographic projection (WGS84)
-
-```{r Urban areas}
-# Download land use data from GitHub Release
-pb_download("MCD12Q1.061_LC_Type1_doy2019001000000_aid0001.tif", 
-            repo = "cstaebell/final-project-cstaebell")
-pb_download("MCD12Q1.061_LC_Type1_doy2020001000000_aid0001.tif", 
-            repo = "cstaebell/final-project-cstaebell")
-land_use_rast_2019 <- rast("MCD12Q1.061_LC_Type1_doy2019001000000_aid0001.tif")
-land_use_rast_2020 <- rast("MCD12Q1.061_LC_Type1_doy2020001000000_aid0001.tif")
-
-# Subset to each city
-city_ntl_rasters <- list(flagstaff_rast, homerglen_rast, beecave_rast, scranton_rast, 
-                           belvidere_rast, clanton_rast)
-land_use_rasters <- vector("list", length = length(cities))
-urban_ntl_dfs <- vector("list", length = length(cities))
-
-for (i in 1:length(cities)) {
-  # Specify which data to use (2019 for all cities but Clanton)
-  if (i == 6) {
-    land_use_rast <- land_use_rast_2020
-  } else {
-    land_use_rast <- land_use_rast_2019
-  }
-  
-  # Crop and mask to city extent
-  current_rast <- land_use_rast |>
-    terra::crop(cities[[i]]) |>
-    mask(cities[[i]])
-  # Save to list for future use 
-  land_use_rasters[[i]] <- current_rast
-  
-  # Mask all but urban land use  
-  urban_area <- current_rast
-  urban_area[urban_area != 13] <- NA
-  city_urban <- city_ntl_rasters[[i]] |>
-    mask(urban_area) 
-  
-  # Calculate mean NTL for urban areas 
-  urban_ntl_dfs[[i]] <- data.frame(values(city_urban)) |>
-    summarize(across(t2014:t2024, ~ mean(.x, na.rm = TRUE))) |>
-    pivot_longer(cols = t2014:t2024) |>
-    mutate(name = years) |>
-    rename(year = name, mean_urban_ntl = value)
-}
-
-# Create separate dataframes from list object
-urban_ntl_var_names <- paste0(c("flagstaff", "homerglen", "beecave", "scranton", 
-                           "belvidere", "clanton"), "_urban_ntl")
-
-for (i in 1:length(urban_ntl_dfs)) {
-  assign(urban_ntl_var_names[i], urban_ntl_dfs[[i]])
-}
-```
 
 Plot mean urban NTL.
 
@@ -441,21 +468,16 @@ bc_urban_means <- ggplot() +
 fs_urban_means + hb_urban_means + bc_urban_means
 ```
 
-
-# Open questions/further exploration: 
-
 * See if conclusions can be drawn after all cities are processed. This includes looking at the lighting policies in each city. 
 
-* Some cities are switching from orange high pressure sodium lamps to white LEDs. VIIRS spectral range does not completely cover the blue light peak of many modern white LEDs, which can lead to somewhat misleading decreases in satellite-observed radiance.
-
 * Interactive graphics / graphics first with more details later?
-
-# Results
-
 
 
 # Conclusions
 
+* More nuanced use of land use data
+
+* Some cities are switching from orange high pressure sodium lamps to white LEDs. VIIRS spectral range does not completely cover the blue light peak of many modern white LEDs, which can lead to somewhat misleading decreases in satellite-observed radiance.
 
 
 # References
