@@ -60,6 +60,7 @@ library(tidyterra)
 library(tidycensus)
 library(patchwork)
 library(piggyback)
+library(ggiraph)
 ```
 
 ## Download and clean all required data
@@ -408,18 +409,64 @@ ggplot(conus_df) +
   theme_light()
 ```
 
-National choropleth maps:
+State means for 2024 are plotted in the figure below. Annual radiance tends to be higher for eastern states, which reflects known patterns of population density.
 
-```{r national choropleths}
-# Create choropleths
+```{r national mean choropleth}
+# Create ggplot map for ggiraph
 st_2024_mean_map <- ggplot() +
-  geom_sf(data = filter(states_ntl, NAME != "District of Columbia"), aes(fill = ntl_2024)) +
-  labs(title = "Mean Annual Nighttime Lights by State, 2024")
+  geom_sf_interactive(data = filter(states_ntl, NAME != "District of Columbia"), 
+                      aes(fill = ntl_2024,
+                      tooltip = paste(NAME, "\n", round(ntl_2024, 2)),
+                      data_id = NAME)) +
+  theme_void() +
+  theme(legend.position = "bottom",
+        legend.direction = "horizontal") +
+  scale_fill_viridis_c() +
+  labs(title = "Mean Annual Nighttime Lights by State, 2024", 
+       fill = expression("Mean Radiance (nW cm"^-2~"sr"^-1*")"),
+       caption = "Data: NASA Black Marble & US Census Bureau")
 
+# Transform into interactive ggiraph object
+int_st2024mean <- girafe(ggobj = st_2024_mean_map,
+                           options = list(opts_hover(css = "stroke:cyan;stroke-width:2px"),
+                                          opts_hover_inv(css = "opacity:0.8;"),
+                                          opts_tooltip(
+                                            css = "background-color:white;color:black;padding:15px;
+                                            border-radius:10px;
+                                            font-family:Arial;font-size:15px;"
+                                          )))
+int_st2024mean
+```
+
+In the period from 2014 to 2024, most states experienced an increase in detected nighttime radiance. Texas, Montana, Idaho, and Utah all show particularly large increases upwards of 40%. On the other hand, several states have stayed fairly constant or even decreased over the 10-year span.
+
+```{r state pct change}
 st_pct_change_map <- ggplot() + 
-  geom_sf(data = states_ntl, aes(fill = pct_change))
+  geom_sf_interactive(data = filter(states_ntl, NAME != "District of Columbia"), 
+                      aes(fill = pct_change,
+                          tooltip = paste(NAME, "\n", round(pct_change, 1),"%", 
+                                          "\n2014: ", round(ntl_2014, 2),
+                                          "\n2024: ", round(ntl_2024, 2)),
+                          data_id = NAME)) +
+  theme_void() +
+  theme(legend.position = "bottom",
+        legend.direction = "horizontal") +
+  scale_fill_gradient2(low = "navy", 
+                       mid = "white",
+                       high = "darkred",
+                      midpoint = 0) +
+  labs(title = "Mean Radiance Percent Change (2014 - 2024)",
+       fill = "% Change",
+       caption = "Data: NASA Black Marble & US Census Bureau")
 
-st_2024_mean_map / st_pct_change_map
+girafe(ggobj = st_pct_change_map,
+       options = list(opts_hover(css = "stroke:black;stroke-width:2px"),
+                 opts_hover_inv(css = "opacity:0.8;"),
+                 opts_tooltip(css = "background-color:white;color:black;padding:15px;
+                                     border-radius:10px;
+                                     font-family:Arial;font-size:15px;")
+                 ))
+
 ```
 
 Annual means line plots:
@@ -482,28 +529,26 @@ fs_urban_means + hb_urban_means + bc_urban_means
 
 # References
 
-Bocinsky, R.K., Beaudette, D., Chamberlain, S., Hollister, J., Gustavsen, J. (2025). Package 'FedData'. <https://cran.r-project.org/web/packages/FedData/FedData.pdf>.
+[1] Chepesiuk, R. (2009). Missing the dark: health effects of light pollution. Environmental Health Perspectives, 117(1), A20+. <https://www.jstor.org/stable/40066663>.
 
-Chepesiuk, R. (2009). Missing the dark: health effects of light pollution. Environmental Health Perspectives, 117(1), A20+. <https://www.jstor.org/stable/40066663>.
+[2] Hunter, T., (2023). The birth of DarkSky (IDA) and a lifelong mission fighting light pollution. DarkSky. <https://darksky.org/news/the-birth-of-ida-and-a-lifelong-mission-fighting-light-pollution/>.
 
-DarkSky International. (2015). Flagstaff, Arizona. <https://darksky.org/places/flagstaff-arizona-dark-sky-community/>.
+[3] DarkSky International. (2025a). About DarkSky. <https://darksky.org/about/#mission>.
 
-DarkSky International. (2025a). About DarkSky. <https://darksky.org/about/#mission>.
+[4] DarkSky International (2025b). International Dark Sky Places. <https://darksky.org/what-we-do/international-dark-sky-places/>.
 
-DarkSky International (2025b). International Dark Sky Places. <https://darksky.org/what-we-do/international-dark-sky-places/>.
+[5] Román, M. O., Wang, Z., Sun, Q., Kalb, V., Miller, S. D., Molthan, A., Schultz, L., Bell, J., Stokes, E. C., Pandey, B., Seto, K. C., Hall, D., Oda, T., Wolfe, R. E., Lin, G., Golpayegani, N., Devadiga, S., Davidson, C., Sarkar, S., Praderas, C., Schmaltz, J., Boller, R., Stevens, J., Ramos González, O. M., Padilla, E., Alonso, J., Detrés, Y., Armstrong, R., Miranda, I., Conte, Y., Marrero, N., MacManus, K., Esch, T., Masuoka, E. J. (2018). NASA's Black Marble nighttime lights product suite. Remote Sensing of Environment, 210: 113-143, <https://doi.org/10.1016/j.rse.2018.03.017>.
 
-Hunter, T., (2023). The birth of DarkSky (IDA) and a lifelong mission fighting light pollution. DarkSky. <https://darksky.org/news/the-birth-of-ida-and-a-lifelong-mission-fighting-light-pollution/>.
+[6] Marty, R., Vicente, G.S. (2025). Package 'blackmarbler'. <https://cran.r-project.org/web/packages/blackmarbler/blackmarbler.pdf>.
 
-Marty, R., Vicente, G.S. (2025). Package 'blackmarbler'. <https://cran.r-project.org/web/packages/blackmarbler/blackmarbler.pdf>.
+[7] U.S. Census Bureau. 2024. 2024 Census TIGER/Line Shapefiles. <https://data.census.gov>
 
-NASA. Black Marble. <https://blackmarble.gsfc.nasa.gov/>.
+[8] Walker, K. , Rudis, B. (2025). Tigris: Load Census TIGER/Line shapefiles. R package version 2.2.1. <https://cran.r-project.org/web/packages/tigris/index.html>
 
-Román, M. O., Wang, Z., Sun, Q., Kalb, V., Miller, S. D., Molthan, A., Schultz, L., Bell, J., Stokes, E. C., Pandey, B., Seto, K. C., Hall, D., Oda, T., Wolfe, R. E., Lin, G., Golpayegani, N., Devadiga, S., Davidson, C., Sarkar, S., Praderas, C., Schmaltz, J., Boller, R., Stevens, J., Ramos González, O. M., Padilla, E., Alonso, J., Detrés, Y., Armstrong, R., Miranda, I., Conte, Y., Marrero, N., MacManus, K., Esch, T., Masuoka, E. J. (2018). NASA's Black Marble nighttime lights product suite. Remote Sensing of Environment, 210: 113-143, <https://doi.org/10.1016/j.rse.2018.03.017>.
+[9] U.S. Census Bureau. (2023). Total Population.  American Community Survey 5-Year Estimates Detailed Tables. Table B01003.
 
-Schultz, J. (2022). States shut out light pollution. National Conference of State Legislatures. <https://www.ncsl.org/environment-and-natural-resources/states-shut-out-light-pollution>
+[10] Walker, K., Herman, M. (2025). tidycensus: Load US Census Boundary and Attribute Data as 'tidyverse' and 'sf'-Ready Data Frames. R package version 1.7.3, <https://walker-data.com/tidycensus/>.
 
-Stare, J., Kyba, C. (2025): Radiance Light Trends. GFZ Data Services. <https://doi.org/10.5880/GFZ.1.4.2019.001>.
+[11] Friedl, M., Sulla-Menashe, D. (2022). MODIS/Terra+Aqua Land Cover Type Yearly L3 Global 500m SIN Grid V061. NASA EOSDIS Land Processes Distributed Active Archive Center. Accessed 2025-11-29 from <https://doi.org/10.5067/MODIS/MCD12Q1.061>. Accessed November 29, 2025.
 
-Walker, K., Herman, M. (2025). tidycensus: Load US Census Boundary and Attribute Data as 'tidyverse' and 'sf'-Ready Data Frames. R package version 1.7.3, <https://walker-data.com/tidycensus/>.
-
-Weishampel, Z.A., Cheng, W.-H. and Weishampel, J.F. (2016), Sea turtle nesting patterns in Florida vis-à-vis satellite-derived measures of artificial lighting. Remote Sens Ecol Conserv, 2: 59-72. <https://doi.org/10.1002/rse2.12>.
+[12] Schultz, J. (2022). States shut out light pollution. National Conference of State Legislatures. <https://www.ncsl.org/environment-and-natural-resources/states-shut-out-light-pollution>
