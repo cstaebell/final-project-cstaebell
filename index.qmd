@@ -9,7 +9,7 @@ code-tools:
   toggle: true
 execute:
   message: false
-  warning: true
+  warning: false
   echo: true
   output: true
 ---
@@ -18,7 +18,7 @@ execute:
 
 Electric lights have benefited society immensely since their invention in 1879. Modern work, recreation, and transportation are made possible largely due to artificial lighting. However, when artificial outdoor lighting becomes inefficient and unnecessary, it is known as light pollution, with negative impacts on both wildlife and humans [1]. 
 
-Concerns about the impacts of light pollution on observational astronomy led to the 1988 formation of the nonprofit now known as DarkSky International [2]. Since then, DarkSky has grown into a recognized global authority on light pollution with a mission to safeguard communities and wildlife against light pollution [3]. The organization's International Dark Sky Places program allows communities, parks, and protected areas to seek certification for efforts to preserve and protect their dark skies [4]. While many communities implement outdoor lighting policies without seeking recognition, a DarkSky certification is an indicator of places that have made dark sky conservation a priority.  
+Concerns about the impacts of light pollution on astronomical observation led to the 1988 formation of the nonprofit now known as DarkSky International [2]. Since then, DarkSky has grown into a recognized global authority on light pollution with a mission to safeguard communities and wildlife against light pollution [3]. The organization's International Dark Sky Places program allows communities, parks, and protected areas to seek certification for efforts to preserve and protect their dark skies [4]. While many communities implement outdoor lighting policies without seeking recognition, a DarkSky certification is an indicator of places that have made dark sky conservation a priority.  
 
 This project aims to explore trends in nighttime light levels first from a national contiguous US perspective, and through more detailed case studies of individual cities. Three DarkSky certified communities [4] with different sizes and designation dates have been selected: 
 
@@ -26,7 +26,7 @@ This project aims to explore trends in nighttime light levels first from a natio
 * Homer Glen, Illinois: Population ~25,000, designated 2011;
 * Bee Cave, Texas: Population ~9,000, designated 2023.
 
-These three communities will each be paired with a community of similar size that has fewer, if any, ordinances controlling light pollution. Each community pair will be examined to see if there are observable differences in nighttime light emissions.
+These three communities were each paired with a community of similar size that has fewer, if any, ordinances controlling light pollution. Each community pair was examined to see if there are observable differences in nighttime radiance.
 
 
 # Materials and methods
@@ -41,7 +41,6 @@ The following data were used.
   + Spatial resolution: 500 m
 
 ```{r load packages}
-#| warning: false
 #| output: false
 
 library(tidyverse)
@@ -68,12 +67,12 @@ library(scales)
 
 ### National and statewide nighttime lights
 
-A US Census TIGER shapefile was downloaded to provide geographic state boundaries. A separate script was used to download and save annual nighttime lights data for the contiguous US ('black_marble_data_download.R'). Raster data was downloaded for plotting purposes, and extracted mean nighttime lights values were also downloaded for analysis. Nighttime lights are radiance values with units of $\frac{n W}{cm^2 sr}$.
+A US Census TIGER shapefile was downloaded to provide geographic state boundaries. A separate script was used to download and save annual nighttime lights rasters for the contiguous US ('black_marble_data_download.R'). The script was also used to obtain extracted nighttime lights values aggregated at the national and state levels. Nighttime lights are provided as radiance values with units of $\frac{n W}{cm^2 sr}$.
 
 ```{r Download and process NTL data}
-#| warning: false
 #| output: false
 
+# Download and process CONUS NTL data
 # Define national spatial extent
 nonconus <- c("Guam", "Hawaii", "Alaska",
               "Commonwealth of the Northern Mariana Islands",
@@ -102,7 +101,7 @@ log_us_2024 <- app(us_2024_rast, fun = log1p)
 #aggregate(log_us_2024, fact = 4, fun = "median", filename = "data/log_us_2024_downsampled.tif", overwrite = TRUE)
 
 #---
-# Download and process annual US mean NTL data
+# Download and process annual US mean NTL values
 #---
 years = 2014:2024
 conus_means = numeric(length(years))
@@ -120,7 +119,7 @@ for (i in 1:length(years)) {
 conus_df <- data.frame(year = years, mean_ntl = conus_means)
 
 #---
-# Download and process mean NTL data for states
+# Download and process mean NTL values for states
 #---
 state_means <- matrix(nrow = 49, ncol = length(years))
 
@@ -197,7 +196,7 @@ beecave <- places(state = "TX", cb = TRUE, year = 2024) |>
 
 ```
 
-Candidate cities to pair with each selected Dark Sky community were found by filtering US ACS population data to return a listing of municipalities with populations within 1% of each Dark Sky community population. Final comparison cities were selected based on population match and state. Preference was given to cities within states that are not known to have laws regarding light pollution or dark sky protection, as compiled by Schultz [12].
+ACS population data were filtered to return a listing of candidate municipalities with populations within 1% of each Dark Sky community population. Final Comparison cities were selected based on population match and state, with preference given to cities within states that are not known to have laws regarding outdoor lighting geared toward dark sky protection [12].
 
 ```{r Process Census data}
 #| output: false
@@ -248,7 +247,7 @@ The final city pairs are as follows:
 | C | Clanton, AL | `r format(clanton$estimate, big.mark = ",", scientific = FALSE)` |
 
 
-The annual US nighttime lights rasters were read in and subsetted to create a raster and dataframe of mean values for each city. Since simply looking at annual means for each city may be more of a proxy for overall development than for lighting policy, land use/land cover data[^1] were also brought in to help make comparisons across communities more meaningful. The land cover rasters were cropped to each city, and then the urban areas were isolated, allowing for calculation of annual mean urban nighttime lights.
+After selecting cities, the annual US nighttime lights rasters were read in and subsetted to create a raster and dataframe of mean values for each city. Since simply looking at annual means for each city may be more of a proxy for overall development than for lighting policy, land use/land cover data[^1] were also brought in to help make comparisons across communities more meaningful. The land cover rasters were cropped to each city, and then the urban areas were isolated, allowing for calculation of annual mean nighttime lights from urban areas only.
 
 [^1]: Although land cover changes over the period from 2014 to 2024, for the purposes of this project, only one year of land cover data was considered for each community. Data availability is one reason for this simplification -- annual data is not available for all study areas for all years, and the MODIS science team urges caution when using land cover layers for 2021 and beyond due to lack of updates to the classification training database [11]. Therefore, 2019 data was used for all cities except for Clanton, which used 2020 data.
 
@@ -333,8 +332,6 @@ land_use_rast_2019 <- rast("MCD12Q1.061_LC_Type1_doy2019001000000_aid0001.tif")
 land_use_rast_2020 <- rast("MCD12Q1.061_LC_Type1_doy2020001000000_aid0001.tif")
 
 # Subset land cover rasters to each city
-#city_ntl_rasters <- list(flagstaff_rast, homerglen_rast, beecave_rast, scranton_rast, 
-#                          belvidere_rast, clanton_rast)
 land_use_rasters <- vector("list", length = length(cities))
 urban_ntl_dfs <- vector("list", length = length(cities))
 
@@ -470,7 +467,6 @@ all_pair_urban <- bind_rows(pair_a_urban, pair_b_urban, pair_c_urban)
 Mean nighttime light radiance for the entire contiguous US is plotted below, where a generally increasing trend can be observed over the past ten years.
  
 ```{r Plot CONUS mean radiance vs year}
-#| warning: false
   
 ggplot(conus_df) +
   geom_point(aes(x = year, y = mean_ntl)) +
@@ -492,7 +488,7 @@ st_2024_mean_map <- ggplot() +
   theme_void() +
   theme(text = element_text(family = "Arial")) +
   scale_fill_viridis_c() +
-  labs(title = "Mean Annual Nighttime Lights by State, 2024", 
+  labs(title = "Mean Nighttime Lights by State, 2024", 
        fill = expression("Mean Radiance (nW cm"^-2~"sr"^-1*")"),
        caption = "Data: NASA Black Marble & US Census Bureau")
 
@@ -539,9 +535,9 @@ girafe(ggobj = st_pct_change_map,
 
 ## Case Studies
 
-```{r leaflet map1, eval = F}
-#| warning: false
+```{r leaflet map}
 
+# Leaflet prep
 fs_coord <- st_centroid(flagstaff) |>
   st_coordinates() |>
   data.frame() |>
@@ -573,13 +569,37 @@ cl_coord <- st_centroid(clanton) |>
   mutate(city = "Clanton", pair = "C", group = "Comparison")
 
 markers_df <- bind_rows(fs_coord, sc_coord, hg_coord, bv_coord, bc_coord, cl_coord)
+markers_df$pair <- as.factor(markers_df$pair)
 
 log_us_2024_ds <- rast("data/log_us_2024_downsampled.tif")
 
+vals <- values(log_us_2024_ds, mat = FALSE)
+midpoint <- 3.5
+
+breaks <- c(min(vals, na.rm = TRUE),
+            seq(min(vals, na.rm = TRUE), midpoint, length.out = 5)[-1],
+            seq(midpoint, max(vals, na.rm = TRUE), length.out = 5)[-1])
+
+pal <- colorBin(palette = c("black", "yellow", "red"),
+                domain = vals,
+                bins = breaks,
+                na.color = "transparent")
+
+
+city_color_pal <- colorFactor(palette = c("firebrick", "royalblue3", "green4"),
+                           domain = markers_df$pair)
+
+city_popup <- paste0("<b>", markers_df$city, "</b><br/>",
+                     "<i>", markers_df$group, " Community</i><br/>",
+                     "Pair: ", markers_df$pair)
+
+# Leaflet map
 leaflet() |>
   addProviderTiles("CartoDB") |>
-  addRasterImage(log_us_2024_ds, group = "US NTL") |>
-  addMarkers(data = markers_df, ~X, ~Y, label = ~as.character(city))
+  addRasterImage(log_us_2024_ds, group = "US NTL", colors = pal) |>
+  addCircleMarkers(data = markers_df, ~X, ~Y, fillColor = ~city_color_pal(pair), 
+                   fillOpacity = 0.9, color = "black", 
+                   label = ~as.character(city), popup = city_popup)
 
 ```
 
@@ -587,7 +607,7 @@ Four of the six case study cities exhibit an increasing trend similar to that of
 
 ```{r compare city annual means}
 
-# Create plot
+# Plot of annual means
 ggplot(data = all_pair_means) +
   geom_line(aes(x = year, y = mean_ntl, color = pair, linetype = group), linewidth = 1) +
   facet_wrap(~ pair, labeller = labeller(pair = pair_names)) +
@@ -606,8 +626,8 @@ ggplot(data = all_pair_means) +
 
 A quick look at the land use for Flagstaff compared to Scranton helps to explain the vast difference in mean nighttime lights between the two cities. Flagstaff contains much more undeveloped land like grassland and savannas, whereas most of Scranton is classified as urban and built up.
 
-```{r Land use plots Flagstaff and Scranton}
-
+```{r Land cover plots Flagstaff and Scranton}
+# Sample comparison of land cover
 fs_lulc_plot <- ggplot(flagstaff_lulc, aes(x = x, y = y)) +
   geom_tile(aes(fill = landcover)) +
   coord_quickmap() +
@@ -633,10 +653,10 @@ fs_lulc_plot + sc_lulc_plot + plot_layout(guides = "collect") & theme(legend.pos
 
 ```
 
-Given the imbalances in land cover between different cities, restricting analysis to urban areas seems to be a more effective means of comparison. (Proceeding this way introduces an assumption that any lighting policy effects outside of non-built-up areas are dwarfed by those on urban areas.) From the plots of urban mean radiance, we can see that the radiance for the Dark Sky Places is generally lower than for their paired cities.
+Given the imbalances in land cover between different cities, restricting analysis to urban areas is a more effective means of comparison. (Proceeding this way introduces an assumption that any lighting policy effects outside of non-built-up areas are dwarfed by those on urban areas.) From the plots of urban mean radiance, we can see that the radiance for the Dark Sky Places is generally lower than for their paired cities.
 
 ```{r Urban NTL comparison}
-
+# Urban mean NTL plot
 ggplot(data = all_pair_urban) +
   geom_line(aes(x = year, y = mean_urban_ntl, color = pair, linetype = group), linewidth = 1) +
   facet_wrap(~ pair, labeller = labeller(pair = pair_names)) +
@@ -655,20 +675,35 @@ ggplot(data = all_pair_urban) +
 
 
 ### Discussion of lighting policies
-Use DarkSky certification application packets?
 
-Flagstaff's Lighting Ordinance aims to encourage lighting practices and systems that will minimize light pollution and trespass, balance the conservation of energy with the maintenance of nighttime safety and productivity, and reduce degradation of the nighttime visual environment [13]. Low-pressure sodium (LPS) lamps or narrow-spectrum amber LEDs are required in all Class 2 Lighting Areas. Decorative lighting must be included in the total lumen calculations for the site. Restrictions on total outdoor light output vary by zone and land use type (commercial, industrial, and multifamily residential vs single-family residential). Shielded light fixtures can be used to reduce contribution to total calculation. Shielding and proper aiming is also required to confine direct illumination from light fixtures to the property boundaries of the source (light trespass standard). Time limits for outdoor lighting - 9 or 11 pm or no later than 30 min after business closes. Street lighting standards in City Engineering Standards, Title 12. Holiday decorations - "low voltage holiday decorations may be unshielded and remain on all night from November 15 to January 15." Standards for internally illuminated signs -- cannot have a light background
+#### Pair A
+
+As the home of two major observatories, Flagstaff has been at the forefront of outdoor lighting policy since 1958. The city's lighting ordinance aims to encourage lighting practices and systems that will minimize light pollution and trespass while still maintaining nighttime safety, security, and productivity. The code includes comprehensive standards for maximum total outdoor light output, shielding requirements, time limits, sign illumination, and lamp types. [13]
+
+Scranton's Zoning Ordinance includes one short section devoted to lighting, which mainly focuses on curbing light trespass and nuisance glare. Maximum illumination levels are defined for two lighting levels. [14] 
+
+#### Pair B
+
+Homer Glen's outdoor lighting ordinance is rooted in the desire to preserve rural character and aesthetic value. The ordinance establishes maximum light output and inclination for various outdoor lighting applications, permitted hours for lighting, shielding requirements, and bulb types. [15]
+
+Similar to Scranton, Belvidere includes exterior lighting standards in their code of ordinances but does so for the purposes of promoting traffic safety and preventing nuisances. The ordinance sets limits on illumination intensity and hours of illumination outside of buildings, plus some requirements for light orientation and shielding. However, these provisions are not as strict or clearly defined as those in the Homer Glen ordinanace. [16]
+
+#### Pair C
+
+Bee Cave's Unified Development Code contains a comprehensive lighting ordinance that appears similar to Flagstaff's. The code addresses lighting controls, lumen caps, shielding and cut-off standards, sign illumination restrictions, and more. [17]
+
+The code of ordinances for Clanton lacks a section devoted to lighting. Still, lights are mentioned in relation to other regulated items like signs and gas stations. The ordinance for gas stations includes a provision to prevent light trespass, but otherwise, outdoor lighting policy does not appear to be a priority for the city. [18]
 
 
 # Conclusions
 
 Nighttime light emissions from the contiguous US show an increasing trend. Some states show drastic growth in radiance from 2014-2024, while others, particularly in the Midwest and Northeast, show more moderate changes. 
 
-After controlling for population and urban area, the nighttime lights of DarkSky-certified communities appear lower than those of similar cities that have not made outdoor lighting policy a priority. Some consistent elements across the Dark Sky community policies are XYZ. Many factors determine nighttime lights, and there is no proof that lighting policy can completely explain the observed differences, but it is encouraging to see the generally lower emissions from Dark Sky places. 
+After controlling for population and urban area, the nighttime lights of DarkSky-certified communities appear lower than those of similar cities that have not made outdoor lighting policy a priority. Bee Cave, the most recently designated Dark Sky place, is most similar to its paired community. It is possible that Bee Cave is still transitioning fixtures and practices to align with its newer commitment to dark sky preservation. 
 
 ### Limitations and further opportunities:
 
-* Radiance of nighttime lights is not a direct measure of light pollution. Some cities are switching from orange high pressure sodium lamps to white LEDs. VIIRS spectral range does not completely cover the blue light peak of many modern white LEDs, which can lead to somewhat misleading decreases in satellite-observed radiance [X]. 
+* Radiance of nighttime lights is not a direct measure of light pollution. Some cities are switching from orange high pressure sodium lamps to white LEDs. VIIRS spectral range does not completely cover the blue light peak of many modern white LEDs, which can lead to somewhat misleading decreases in satellite-observed radiance [19]. 
 * Cities were paired based on same population as of 2023 ACS census. It is likely that the populations were not the same for all other years due to different rates of population growth.
 * One year of land cover data was assumed to represent each city's land cover over the 10-year span, which is a simplification. Future analysis could incorporate a more nuanced use of land cover data.
 * Similarly, annual population data could be incorporated to further explore the relationship between nighttime lights and population. 
@@ -702,8 +737,16 @@ After controlling for population and urban area, the nighttime lights of DarkSky
 
 [12] Schultz, J. (2022). States shut out light pollution. National Conference of State Legislatures. <https://www.ncsl.org/environment-and-natural-resources/states-shut-out-light-pollution>
 
-[13] Flagstaff Lighting Ordinance (finish citation)
+[13] Flagstaff, Arizona. (2011). Flagstaff Zoning Code, Division 10-50.70: Outdoor Lighting Standards. Accessed via DarkSky.org, <https://darksky.org/places/flagstaff-arizona-dark-sky-community/>.
 
-[14] Homer Glen Lighting Ordinance (finish citation)
+[14] Scranton, Pennsylvania. (2023). City of Scranton Zoning Ordinance, Article 5, Section 5.10 - Lighting and Glare. 
 
-[X] Stare, Jurij; Kyba, Christopher (2025): Radiance Light Trends. GFZ Data Services. <https://doi.org/10.5880/GFZ.1.4.2019.001>.
+[15] Village of Homer Glen, Illinois. (2010). An Ordinance Regulating Outdoor Lighting in the Village of Homer Glen. Accessed via DarkSky.org, <https://darksky.org/places/homer-glen-illinois-dark-sky-community/>.
+
+[16] Belvidere, Illinois. (2025). Belvidere, Illinois - Code of Ordinances, Chapter 150, Article 7, Section 150.707. - Exterior lighting standards. <https://library.municode.com/il/belvidere/codes/code_of_ordinances?nodeId=BELVIDERE_MUNICIPAL_CODE_CH150ZO_ART7PEST_S150.707EXLIST>
+
+[17] City of Bee Cave, Texas. (2025). City of Bee Cave, TX Code, Title II, Chapter UDC, Article 6, Section 6.2 - Lighting. <https://ecode360.com/40281623>
+
+[18] Clanton, Alabama. (2025). Code of Ordinances. <https://library.municode.com/al/clanton/codes/code_of_ordinances?nodeId=12327>
+
+[19] Stare, Jurij; Kyba, Christopher (2025): Radiance Light Trends. GFZ Data Services. <https://doi.org/10.5880/GFZ.1.4.2019.001>.
