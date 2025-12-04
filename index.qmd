@@ -1,6 +1,6 @@
 ---
 title: "Starry Night?"
-subtitle: An exploration of nighttime lights and the Dark-Sky Movement in the US
+subtitle: An exploration of nighttime lights and the Dark Sky Movement in the US
 author: Carly Staebell
 date: today
 date-format: long
@@ -33,10 +33,10 @@ These three communities will each be paired with a community of similar size tha
 
 The following data were used. 
 
-* NASA's Black Marble annual nighttime lights (VNP46A4 data product) [5] sourced via the *blackmarbler* R package [6] 
+* NASA's Black Marble annual nighttime lights (VNP46A4 data product) [5] sourced via the `blackmarbler` package [6] 
   + Spatial resolution: 500 m
-* US Census Bureau TIGER data [7] sourced via the *tigris* R package [8]
-* US Census Bureau American Community Survey (ACS) population data [9] sourced via the *tidycensus* R package [10]
+* US Census Bureau TIGER data [7] sourced via the `tigris` package [8]
+* US Census Bureau American Community Survey (ACS) population data [9] sourced via the `tidycensus` package [10]
 * MODIS Type 1 yearly land use/land cover (MCD12Q1 data product) sourced via AppEEARS [11]
   + Spatial resolution: 500 m
 
@@ -61,6 +61,7 @@ library(tidycensus)
 library(patchwork)
 library(piggyback)
 library(ggiraph)
+library(scales)
 ```
 
 ## Download and clean all required data
@@ -69,7 +70,7 @@ library(ggiraph)
 
 A US Census TIGER shapefile was downloaded to provide geographic state boundaries. A separate script was used to download and save annual nighttime lights data for the contiguous US ('black_marble_data_download.R'). Raster data was downloaded for plotting purposes, and extracted mean nighttime lights values were also downloaded for analysis. Nighttime lights are radiance values with units of $\frac{n W}{cm^2 sr}$.
 
-```{r Download 2024 national raster}
+```{r Download and process NTL data}
 #| warning: false
 #| output: false
 
@@ -96,6 +97,9 @@ us_2024_rast <- rast("US_VNP46A4_NearNadir_Composite_Snow_Free_qflag_t2024.tif")
 
 # create log transformed version for plotting
 log_us_2024 <- app(us_2024_rast, fun = log1p)
+
+# Downsample log data for map (commented out since file written)
+#aggregate(log_us_2024, fact = 4, fun = "median", filename = "data/log_us_2024_downsampled.tif", overwrite = TRUE)
 
 #---
 # Download and process annual US mean NTL data
@@ -236,20 +240,28 @@ The final city pairs are as follows:
 
 | Pair | Community | Population | 
 |------|-----------|------------|
-| 1 | Flagstaff, AZ | `r format(flagstaff$estimate, big.mark = ",", scientific = FALSE)` |
-| 1 | Scranton, PA | `r format(scranton$estimate, big.mark = ",", scientific = FALSE)` |
-| 2 | Homer Glen, IL | `r format(homerglen$estimate, big.mark = ",", scientific = FALSE)` |
-| 2 | Belvidere, IL | `r format(belvidere$estimate, big.mark = ",", scientific = FALSE)` |
-| 3 | Bee Cave, TX | `r format(beecave$estimate, big.mark = ",", scientific = FALSE)` |
-| 3 | Clanton, AL | `r format(clanton$estimate, big.mark = ",", scientific = FALSE)` |
+| A | Flagstaff, AZ | `r format(flagstaff$estimate, big.mark = ",", scientific = FALSE)` |
+| A | Scranton, PA | `r format(scranton$estimate, big.mark = ",", scientific = FALSE)` |
+| B | Homer Glen, IL | `r format(homerglen$estimate, big.mark = ",", scientific = FALSE)` |
+| B | Belvidere, IL | `r format(belvidere$estimate, big.mark = ",", scientific = FALSE)` |
+| C | Bee Cave, TX | `r format(beecave$estimate, big.mark = ",", scientific = FALSE)` |
+| C | Clanton, AL | `r format(clanton$estimate, big.mark = ",", scientific = FALSE)` |
 
 
-The annual US nighttime lights rasters were then subsetted to create a raster and dataframe of mean values for each city. 
+The annual US nighttime lights rasters were read in and subsetted to create a raster and dataframe of mean values for each city. Since simply looking at annual means for each city may be more of a proxy for overall development than for lighting policy, land use/land cover data[^1] were also brought in to help make comparisons across communities more meaningful. The land cover rasters were cropped to each city, and then the urban areas were isolated, allowing for calculation of annual mean urban nighttime lights.
+
+[^1]: Although land cover changes over the period from 2014 to 2024, for the purposes of this project, only one year of land cover data was considered for each community. Data availability is one reason for this simplification -- annual data is not available for all study areas for all years, and the MODIS science team urges caution when using land cover layers for 2021 and beyond due to lack of updates to the classification training database [11]. Therefore, 2019 data was used for all cities except for Clanton, which used 2020 data.
+
+
 
 ```{r Read in yearly national raster data}
 #| output: false
+# Nighttime lights and land cover data are in a single chunk to avoid external pointer errors when rendering
 
-# Subset rasters to each area 
+#---
+# Nighttime lights
+#---
+# Subset nighttime lights rasters to each city
 cities <- list(flagstaff, homerglen, beecave, scranton, belvidere, clanton)
 city_rasters <- vector("list", length = length(cities))
 
@@ -288,7 +300,6 @@ for (c in 1:length(city_var_names)) {
   assign(city_var_names[c], city_rasters[[c]])
 }
 
-
 # Calculate annual means
 annual_means <- vector("list", length = length(cities))
 for (i in 1:length(city_rasters)) {
@@ -310,17 +321,10 @@ for (i in 1:length(annual_means)) {
   assign(city_df_var_names[i], df)
 }
 
-```
-
-
-However, simply looking at annual radiance means for each city may be more of a proxy for overall development or population density than for lighting policy. Land use/land cover data can be used to help make comparisons across communities more meaningful. 
-
-Although land cover changes over the period from 2014 to 2024, for the purposes of this project, only one year of land cover data was considered for each community. Data availability is one reason for this simplification -- annual data is not available for all study areas for all years, and the MODIS science team urges caution when using land cover layers for 2021 and beyond due to lack of updates to the classification training database [11]. Therefore, 2019 data was used for all cities except for Clanton, which used 2020 data.
-
-Land cover rasters were downloaded and cropped to each city. The urban areas in each city were identified, and then annual mean nighttime lights values were calculated for that urban area.
-
-```{r Urban areas}
-# Download land cover data from GitHub Release
+#---
+# Land cover data
+#---
+# Download land cover data 
 pb_download("MCD12Q1.061_LC_Type1_doy2019001000000_aid0001.tif", 
             repo = "cstaebell/final-project-cstaebell")
 pb_download("MCD12Q1.061_LC_Type1_doy2020001000000_aid0001.tif", 
@@ -329,8 +333,8 @@ land_use_rast_2019 <- rast("MCD12Q1.061_LC_Type1_doy2019001000000_aid0001.tif")
 land_use_rast_2020 <- rast("MCD12Q1.061_LC_Type1_doy2020001000000_aid0001.tif")
 
 # Subset land cover rasters to each city
-city_ntl_rasters <- list(flagstaff_rast, homerglen_rast, beecave_rast, scranton_rast, 
-                           belvidere_rast, clanton_rast)
+#city_ntl_rasters <- list(flagstaff_rast, homerglen_rast, beecave_rast, scranton_rast, 
+#                          belvidere_rast, clanton_rast)
 land_use_rasters <- vector("list", length = length(cities))
 urban_ntl_dfs <- vector("list", length = length(cities))
 
@@ -352,7 +356,7 @@ for (i in 1:length(cities)) {
   # Mask all but urban land use (land use code = 13)
   urban_area <- current_rast
   urban_area[urban_area != 13] <- NA
-  city_urban <- city_ntl_rasters[[i]] |>
+  city_urban <- city_rasters[[i]] |>
     mask(urban_area) 
   
   # Calculate mean NTL for urban areas 
@@ -370,31 +374,98 @@ urban_ntl_var_names <- paste0(c("flagstaff", "homerglen", "beecave", "scranton",
 for (i in 1:length(urban_ntl_dfs)) {
   assign(urban_ntl_var_names[i], urban_ntl_dfs[[i]])
 }
+
+
+# Prepare data for sample land cover plots
+# Define land cover encoding
+Land_Cover_Type_1 <- c(
+  "Water" = 0, "Evergreen Needleleaf forest" = 1, "Evergreen Broadleaf forest" = 2,
+  "Deciduous Needleleaf forest" = 3, "Deciduous Broadleaf forest" = 4, "Mixed forest" = 5,
+  "Closed shrublands" = 6, "Open shrublands" = 7, "Woody savannas" = 8, "Savannas" = 9,
+  "Grasslands" = 10, "Permanent wetlands" = 11, "Croplands" = 12, "Urban & built-up" = 13,
+  "Cropland/Natural vegetation mosaic" = 14, "Snow & ice" = 15, "Barren/Sparsely vegetated" = 16
+)
+
+lcd <- data.frame(
+  ID = Land_Cover_Type_1,
+  landcover = names(Land_Cover_Type_1),
+  stringsAsFactors = FALSE
+)
+
+# Create data frames for plotting
+scranton_lulc <- as.data.frame(land_use_rasters[[4]], xy = TRUE) |>
+  left_join(lcd, by = join_by(MCD12Q1.061_LC_Type1_doy2019001000000_aid0001 == ID))
+
+# Since Scranton has more landcover types, use its types to join with Flagstaff for a consistent color scheme
+lcd_reduced <- lcd |>
+  filter(landcover %in% unique(scranton_lulc$landcover))
+  
+flagstaff_lulc <- as.data.frame(land_use_rasters[[1]], xy = TRUE) |>
+  right_join(lcd_reduced, by = join_by(MCD12Q1.061_LC_Type1_doy2019001000000_aid0001 == ID))
+
+
+```
+
+Finally, paired data frames were created from the processed data to facilitate plotting and visualizations. 
+
+
+```{r Paired data frames}
+# Annual means
+# Pair A: Flagstaff and Scranton
+flagstaff_means_label <- flagstaff_means |>
+  mutate(city = "Flagstaff", pair = "A", group = "Dark Sky")
+scranton_means_label <- scranton_means |>
+  mutate(city = "Scranton", pair = "A", group = "Comparison")
+pair_a_means <- bind_rows(flagstaff_means_label, scranton_means_label)
+
+# Pair B: Homer Glen and Belvidere
+homerglen_means_label <- homerglen_means |>
+  mutate(city = "Homer Glen", pair = "B", group = "Dark Sky")
+belvidere_means_label <- belvidere_means |>
+  mutate(city = "Belvidere", pair = "B", group = "Comparison")
+pair_b_means <- bind_rows(homerglen_means_label, belvidere_means_label)
+
+# Pair C: Bee Cave and Clanton
+beecave_means_label <- beecave_means |>
+  mutate(city = "Bee Cave", pair = "C", group = "Dark Sky")
+clanton_means_label <- clanton_means |>
+  mutate(city = "Clanton", pair = "C", group = "Comparison")
+pair_c_means <- bind_rows(beecave_means_label, clanton_means_label)
+
+all_pair_means <- bind_rows(pair_a_means, pair_b_means, pair_c_means)
+pair_names <- c("Flagstaff & Scranton", "Homer Glen & Belvidere", "Bee Cave & Clanton")
+names(pair_names) <- c("A", "B", "C")
+
+## Urban means
+# Pair A: Flagstaff and Scranton
+flagstaff_urban_label <- flagstaff_urban_ntl |>
+  mutate(city = "Flagstaff", pair = "A", group = "Dark Sky")
+scranton_urban_label <- scranton_urban_ntl |>
+  mutate(city = "Scranton", pair = "A", group = "Comparison")
+pair_a_urban <- bind_rows(flagstaff_urban_label, scranton_urban_label)
+
+# Pair B: Homer Glen and Belvidere
+homerglen_urban_label <- homerglen_urban_ntl |>
+  mutate(city = "Homer Glen", pair = "B", group = "Dark Sky")
+belvidere_urban_label <- belvidere_urban_ntl |>
+  mutate(city = "Belvidere", pair = "B", group = "Comparison")
+pair_b_urban <- bind_rows(homerglen_urban_label, belvidere_urban_label)
+
+# Pair C: Bee Cave and Clanton
+beecave_urban_label <- beecave_urban_ntl |>
+  mutate(city = "Bee Cave", pair = "C", group = "Dark Sky")
+clanton_urban_label <- clanton_urban_ntl |>
+  mutate(city = "Clanton", pair = "C", group = "Comparison")
+pair_c_urban <- bind_rows(beecave_urban_label, clanton_urban_label)
+
+all_pair_urban <- bind_rows(pair_a_urban, pair_b_urban, pair_c_urban)
+
 ```
 
 
 # Results
 
 ## National Trends
-
-The 2024 nighttime lights across the contiguous US are visualized below. 
-
-```{r Plot national raster of ntl}
-#| warning: false
-
-ggplot() +
-  geom_spatraster(data = log_us_2024) + 
-  scale_fill_gradient2(low = "black",
-                       mid = "yellow", 
-                       high = "red",
-                       midpoint = 4.5,
-                       na.value = "transparent") +
-  labs(title = "Nighttime Lights: 2024") +
-  coord_sf() +
-  theme_void() +
-  theme(legend.position = "none")
-```
-
 
 Mean nighttime light radiance for the entire contiguous US is plotted below, where a generally increasing trend can be observed over the past ten years.
  
@@ -409,7 +480,7 @@ ggplot(conus_df) +
   theme_light()
 ```
 
-State means for 2024 are plotted in the figure below. Annual radiance tends to be higher for eastern states, which reflects known patterns of population density.
+State means for 2024 are shown in the figure below. Annual radiance tends to be higher for eastern states, which reflects known patterns of population density.
 
 ```{r national mean choropleth}
 # Create ggplot map for ggiraph
@@ -419,26 +490,24 @@ st_2024_mean_map <- ggplot() +
                       tooltip = paste(NAME, "\n", round(ntl_2024, 2)),
                       data_id = NAME)) +
   theme_void() +
-  theme(legend.position = "bottom",
-        legend.direction = "horizontal") +
+  theme(text = element_text(family = "Arial")) +
   scale_fill_viridis_c() +
   labs(title = "Mean Annual Nighttime Lights by State, 2024", 
        fill = expression("Mean Radiance (nW cm"^-2~"sr"^-1*")"),
        caption = "Data: NASA Black Marble & US Census Bureau")
 
 # Transform into interactive ggiraph object
-int_st2024mean <- girafe(ggobj = st_2024_mean_map,
-                           options = list(opts_hover(css = "stroke:cyan;stroke-width:2px"),
-                                          opts_hover_inv(css = "opacity:0.8;"),
-                                          opts_tooltip(
-                                            css = "background-color:white;color:black;padding:15px;
-                                            border-radius:10px;
-                                            font-family:Arial;font-size:15px;"
+girafe(ggobj = st_2024_mean_map,
+       options = list(opts_hover(css = "stroke:cyan;stroke-width:2px"),
+                      opts_hover_inv(css = "opacity:0.8;"),
+                      opts_tooltip(css = "background-color:white;color:black;padding:15px;
+                                          border-radius:10px;
+                                          font-family:Arial;font-size:15px;"
                                           )))
-int_st2024mean
+
 ```
 
-In the period from 2014 to 2024, most states experienced an increase in detected nighttime radiance. Texas, Montana, Idaho, and Utah all show particularly large increases upwards of 40%. On the other hand, several states have stayed fairly constant or even decreased over the 10-year span.
+In the period from 2014 to 2024, most states experienced an increase in detected nighttime radiance. Texas, Montana, Idaho, and Utah all show particularly large increases upwards of 40%. More research is required to explain these trends, but possible drivers include recent population growth and urban development. On the other hand, several states have stayed fairly constant or even decreased over the 10-year span. 
 
 ```{r state pct change}
 st_pct_change_map <- ggplot() + 
@@ -449,8 +518,7 @@ st_pct_change_map <- ggplot() +
                                           "\n2024: ", round(ntl_2024, 2)),
                           data_id = NAME)) +
   theme_void() +
-  theme(legend.position = "bottom",
-        legend.direction = "horizontal") +
+  theme(text = element_text(family = "Arial")) +
   scale_fill_gradient2(low = "navy", 
                        mid = "white",
                        high = "darkred",
@@ -464,67 +532,148 @@ girafe(ggobj = st_pct_change_map,
                  opts_hover_inv(css = "opacity:0.8;"),
                  opts_tooltip(css = "background-color:white;color:black;padding:15px;
                                      border-radius:10px;
-                                     font-family:Arial;font-size:15px;")
-                 ))
+                                     font-family:Arial;font-size:15px;")))
 
 ```
 
-Annual means line plots:
+
+## Case Studies
+
+```{r leaflet map1, eval = F}
+#| warning: false
+
+fs_coord <- st_centroid(flagstaff) |>
+  st_coordinates() |>
+  data.frame() |>
+  mutate(city = "Flagstaff", pair = "A", group = "Dark Sky")
+
+sc_coord <- st_centroid(scranton) |>
+  st_coordinates() |>
+  data.frame() |>
+  mutate(city = "Scranton", pair = "A", group = "Comparison")
+
+hg_coord <- st_centroid(homerglen) |>
+  st_coordinates() |>
+  data.frame() |>
+  mutate(city = "Homer Glen", pair = "B", group = "Dark Sky")
+
+bv_coord <- st_centroid(belvidere) |>
+  st_coordinates() |>
+  data.frame() |>
+  mutate(city = "Belvidere", pair = "B", group = "Comparison")
+
+bc_coord <- st_centroid(beecave) |>
+  st_coordinates() |>
+  data.frame() |>
+  mutate(city = "Bee Cave", pair = "C", group = "Dark Sky")
+
+cl_coord <- st_centroid(clanton) |>
+  st_coordinates() |>
+  data.frame() |>
+  mutate(city = "Clanton", pair = "C", group = "Comparison")
+
+markers_df <- bind_rows(fs_coord, sc_coord, hg_coord, bv_coord, bc_coord, cl_coord)
+
+log_us_2024_ds <- rast("data/log_us_2024_downsampled.tif")
+
+leaflet() |>
+  addProviderTiles("CartoDB") |>
+  addRasterImage(log_us_2024_ds, group = "US NTL") |>
+  addMarkers(data = markers_df, ~X, ~Y, label = ~as.character(city))
+
+```
+
+Four of the six case study cities exhibit an increasing trend similar to that of the national mean. However, the Pair A cities, Flagstaff and Scranton, show decreasing tendencies. Also notable from this plot are the large differences in radiance values within pairs, despite controlling for population during the city selection process.
 
 ```{r compare city annual means}
-# Annual means
-fs_means <- ggplot() +
-  geom_line(data = flagstaff_means, aes(x = year, y = mean_ntl), color = "blue") +
-  geom_line(data = scranton_means, aes(x = year, y = mean_ntl), color = "red") +
-  labs(x = "Year", y = "Mean NTL", title = "Flagstaff and Scranton Annual Mean Nighttime Lights")
 
-hb_means <- ggplot() +
-  geom_line(data = homerglen_means, aes(x = year, y = mean_ntl), color = "blue") +
-  geom_line(data = belvidere_means, aes(x = year, y = mean_ntl), color = "red") +
-  labs(x = "Year", y = "Mean NTL", title = "Homer Glen and Belvidere Annual Mean Nighttime Lights")
-
-bc_means <- ggplot() +
-  geom_line(data = beecave_means, aes(x = year, y = mean_ntl), color = "blue") +
-  geom_line(data = clanton_means, aes(x = year, y = mean_ntl), color = "red") +
-  labs(x = "Year", y = "Mean NTL", title = "Bee Cave and Clanton Annual Mean Nighttime Lights")
-
-fs_means + hb_means + bc_means
+# Create plot
+ggplot(data = all_pair_means) +
+  geom_line(aes(x = year, y = mean_ntl, color = pair, linetype = group), linewidth = 1) +
+  facet_wrap(~ pair, labeller = labeller(pair = pair_names)) +
+  scale_linetype_manual(values = c("Dark Sky" = "solid", "Comparison" = "dashed")) +
+  scale_color_manual(values = c("A" = "firebrick", "B" = "royalblue3", "C" = "green4")) +
+  labs(x = "Year",
+       y = expression("Mean Radiance (nW cm"^-2~"sr"^-1*")"),
+       title = "Mean Annual Radiance",
+       linetype = "City Type",
+       color = "Pair") +
+  theme_light() +
+  theme(strip.text.x = element_text(color = "black"),
+        plot.title = element_text(hjust = 0.5))
 
 ```
 
+A quick look at the land use for Flagstaff compared to Scranton helps to explain the vast difference in mean nighttime lights between the two cities. Flagstaff contains much more undeveloped land like grassland and savannas, whereas most of Scranton is classified as urban and built up.
 
-Plot mean urban NTL.
+```{r Land use plots Flagstaff and Scranton}
+
+fs_lulc_plot <- ggplot(flagstaff_lulc, aes(x = x, y = y)) +
+  geom_tile(aes(fill = landcover)) +
+  coord_quickmap() +
+  theme_light() +
+  scale_fill_viridis_d() +
+  labs(x = NULL,
+       y = NULL,
+       title = "Flagstaff Land Cover",
+       fill = NULL)
+  
+sc_lulc_plot <- ggplot(scranton_lulc, aes(x = x, y = y)) +
+  geom_tile(aes(fill = landcover)) +
+  coord_quickmap() +
+  theme_light() +
+  scale_fill_viridis_d() +
+  labs(x = NULL,
+       y = NULL,
+       title = "Scranton Land Cover",
+       fill = NULL) +
+  scale_x_continuous(breaks = seq(-75.7, -75.6, by = 0.05))
+
+fs_lulc_plot + sc_lulc_plot + plot_layout(guides = "collect") & theme(legend.position = "bottom")
+
+```
+
+Given the imbalances in land cover between different cities, restricting analysis to urban areas seems to be a more effective means of comparison. (Proceeding this way introduces an assumption that any lighting policy effects outside of non-built-up areas are dwarfed by those on urban areas.) From the plots of urban mean radiance, we can see that the radiance for the Dark Sky Places is generally lower than for their paired cities.
 
 ```{r Urban NTL comparison}
-# Compare cities
-fs_urban_means <- ggplot() +
-  geom_line(data = flagstaff_urban_ntl, aes(x = year, y = mean_urban_ntl), color = "blue") +
-  geom_line(data = scranton_urban_ntl, aes(x = year, y = mean_urban_ntl), color = "red") +
-  labs(x = "Year", y = "Mean NTL", title = "Flagstaff and Scranton Annual Mean Nighttime Lights")
 
-hb_urban_means <- ggplot() +
-  geom_line(data = homerglen_urban_ntl, aes(x = year, y = mean_urban_ntl), color = "blue") +
-  geom_line(data = belvidere_urban_ntl, aes(x = year, y = mean_urban_ntl), color = "red") +
-  labs(x = "Year", y = "Mean NTL", title = "Homer Glen and Belvidere Annual Mean Nighttime Lights")
+ggplot(data = all_pair_urban) +
+  geom_line(aes(x = year, y = mean_urban_ntl, color = pair, linetype = group), linewidth = 1) +
+  facet_wrap(~ pair, labeller = labeller(pair = pair_names)) +
+  scale_linetype_manual(values = c("Dark Sky" = "solid", "Comparison" = "dashed")) +
+  scale_color_manual(values = c("A" = "firebrick", "B" = "royalblue3", "C" = "green4")) +
+  labs(x = "Year",
+       y = expression("Mean Radiance (nW cm"^-2~"sr"^-1*")"),
+       title = "Mean Annual Radiance from Urban Areas",
+       linetype = "City Type",
+       color = "Pair") +
+  theme_light() +
+  theme(strip.text.x = element_text(color = "black"),
+        plot.title = element_text(hjust = 0.5))
 
-bc_urban_means <- ggplot() +
-  geom_line(data = beecave_urban_ntl, aes(x = year, y = mean_urban_ntl), color = "blue") +
-  geom_line(data = clanton_urban_ntl, aes(x = year, y = mean_urban_ntl), color = "red") +
-  labs(x = "Year", y = "Mean NTL", title = "Bee Cave and Clanton Annual Mean Nighttime Lights")
-
-fs_urban_means + hb_urban_means + bc_urban_means
 ```
 
-* See if conclusions can be drawn after all cities are processed. This includes looking at the lighting policies in each city. 
 
-* Interactive graphics / graphics first with more details later?
+### Discussion of lighting policies
+Use DarkSky certification application packets?
+
+Flagstaff's Lighting Ordinance aims to encourage lighting practices and systems that will minimize light pollution and trespass, balance the conservation of energy with the maintenance of nighttime safety and productivity, and reduce degradation of the nighttime visual environment [13]. Low-pressure sodium (LPS) lamps or narrow-spectrum amber LEDs are required in all Class 2 Lighting Areas. Decorative lighting must be included in the total lumen calculations for the site. Restrictions on total outdoor light output vary by zone and land use type (commercial, industrial, and multifamily residential vs single-family residential). Shielded light fixtures can be used to reduce contribution to total calculation. Shielding and proper aiming is also required to confine direct illumination from light fixtures to the property boundaries of the source (light trespass standard). Time limits for outdoor lighting - 9 or 11 pm or no later than 30 min after business closes. Street lighting standards in City Engineering Standards, Title 12. Holiday decorations - "low voltage holiday decorations may be unshielded and remain on all night from November 15 to January 15." Standards for internally illuminated signs -- cannot have a light background
 
 
 # Conclusions
 
-* More nuanced use of land use data
+Nighttime light emissions from the contiguous US show an increasing trend. Some states show drastic growth in radiance from 2014-2024, while others, particularly in the Midwest and Northeast, show more moderate changes. 
 
-* Some cities are switching from orange high pressure sodium lamps to white LEDs. VIIRS spectral range does not completely cover the blue light peak of many modern white LEDs, which can lead to somewhat misleading decreases in satellite-observed radiance.
+After controlling for population and urban area, the nighttime lights of DarkSky-certified communities appear lower than those of similar cities that have not made outdoor lighting policy a priority. Some consistent elements across the Dark Sky community policies are XYZ. Many factors determine nighttime lights, and there is no proof that lighting policy can completely explain the observed differences, but it is encouraging to see the generally lower emissions from Dark Sky places. 
+
+### Limitations and further opportunities:
+
+* Radiance of nighttime lights is not a direct measure of light pollution. Some cities are switching from orange high pressure sodium lamps to white LEDs. VIIRS spectral range does not completely cover the blue light peak of many modern white LEDs, which can lead to somewhat misleading decreases in satellite-observed radiance [X]. 
+* Cities were paired based on same population as of 2023 ACS census. It is likely that the populations were not the same for all other years due to different rates of population growth.
+* One year of land cover data was assumed to represent each city's land cover over the 10-year span, which is a simplification. Future analysis could incorporate a more nuanced use of land cover data.
+* Similarly, annual population data could be incorporated to further explore the relationship between nighttime lights and population. 
+* Beyond this exploratory analysis, statistical tests could be used to quantify differences between cities. Analysis could also be expanded to different cities.
+
 
 
 # References
@@ -552,3 +701,9 @@ fs_urban_means + hb_urban_means + bc_urban_means
 [11] Friedl, M., Sulla-Menashe, D. (2022). MODIS/Terra+Aqua Land Cover Type Yearly L3 Global 500m SIN Grid V061. NASA EOSDIS Land Processes Distributed Active Archive Center. Accessed 2025-11-29 from <https://doi.org/10.5067/MODIS/MCD12Q1.061>. Accessed November 29, 2025.
 
 [12] Schultz, J. (2022). States shut out light pollution. National Conference of State Legislatures. <https://www.ncsl.org/environment-and-natural-resources/states-shut-out-light-pollution>
+
+[13] Flagstaff Lighting Ordinance (finish citation)
+
+[14] Homer Glen Lighting Ordinance (finish citation)
+
+[X] Stare, Jurij; Kyba, Christopher (2025): Radiance Light Trends. GFZ Data Services. <https://doi.org/10.5880/GFZ.1.4.2019.001>.
