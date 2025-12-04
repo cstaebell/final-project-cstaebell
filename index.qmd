@@ -261,6 +261,8 @@ After selecting cities, the annual US nighttime lights rasters were read in and 
 # Nighttime lights
 #---
 # Subset nighttime lights rasters to each city
+city_names <- c("flagstaff", "homerglen", "beecave", "scranton", 
+                           "belvidere", "clanton")
 cities <- list(flagstaff, homerglen, beecave, scranton, belvidere, clanton)
 city_rasters <- vector("list", length = length(cities))
 
@@ -293,8 +295,7 @@ for (i in 1:length(years)){
 city_rasters <- lapply(city_rasters, rast)
 
 # Create separate rasters for each city 
-city_var_names <- paste0(c("flagstaff", "homerglen", "beecave", "scranton", 
-                           "belvidere", "clanton"), "_rast")
+city_var_names <- paste0(city_names, "_rast")
 for (c in 1:length(city_var_names)) {
   assign(city_var_names[c], city_rasters[[c]])
 }
@@ -309,8 +310,7 @@ for (i in 1:length(city_rasters)) {
 }
 
 # Create mean dataframes for each city
-city_df_var_names <- paste0(c("flagstaff", "homerglen", "beecave", "scranton", 
-                           "belvidere", "clanton"), "_means")
+city_df_var_names <- paste0(city_names, "_means")
 for (i in 1:length(annual_means)) {
   df <- annual_means[[i]] |>
     pivot_longer(cols = t2014:t2024) |>
@@ -334,6 +334,10 @@ land_use_rast_2020 <- rast("MCD12Q1.061_LC_Type1_doy2020001000000_aid0001.tif")
 # Subset land cover rasters to each city
 land_use_rasters <- vector("list", length = length(cities))
 urban_ntl_dfs <- vector("list", length = length(cities))
+urban_ntl_vals <- vector("list", length = length(cities))
+group_assign <- c("Dark Sky", "Dark Sky", "Dark Sky", "Comparison", "Comparison", "Comparison")
+pair_assign <- c("A", "B", "C", "A", "B", "C")
+
 
 for (i in 1:length(cities)) {
   # Specify which data to use (2019 for all cities but Clanton)
@@ -362,11 +366,18 @@ for (i in 1:length(cities)) {
     pivot_longer(cols = t2014:t2024) |>
     mutate(name = years) |>
     rename(year = name, mean_urban_ntl = value)
+  
+  # Compile values for statistical tests
+  # put these outside the loop when done. also replace paste0 with city_name
+  
+  urban_ntl_vals[[i]] <- data.frame(values(city_urban)) |>
+    pivot_longer(cols = t2014:t2024) |>
+    filter(!is.na(value)) |>
+    mutate(city = city_names[[i]], group = group_assign[i], pair = pair_assign[i])
 }
 
 # Create separate dataframes from list object
-urban_ntl_var_names <- paste0(c("flagstaff", "homerglen", "beecave", "scranton", 
-                           "belvidere", "clanton"), "_urban_ntl")
+urban_ntl_var_names <- paste0(city_names, "_urban_ntl")
 
 for (i in 1:length(urban_ntl_dfs)) {
   assign(urban_ntl_var_names[i], urban_ntl_dfs[[i]])
@@ -403,7 +414,7 @@ flagstaff_lulc <- as.data.frame(land_use_rasters[[1]], xy = TRUE) |>
 
 ```
 
-Finally, paired data frames were created from the processed data to facilitate plotting and visualizations. 
+Paired data frames were created from the processed data to facilitate plotting and visualizations. 
 
 
 ```{r Paired data frames}
@@ -459,6 +470,30 @@ all_pair_urban <- bind_rows(pair_a_urban, pair_b_urban, pair_c_urban)
 
 ```
 
+Statistical testing was done on the nonaggregated urban lights values. Although there are thousands of samples, radiance data exhibit a heavy right skew. The Shapiro-Wilk test was used to confirm non-normality. Since the data are not normal, a Wilcoxon test was used for each community pair to test if the Comparison group radiance is greater than that of Dark Sky group.
+
+```{r Stat test}
+# Prep values for statistical testing
+pair_a_uvals <- bind_rows(urban_ntl_vals[[1]], urban_ntl_vals[[4]])
+pair_b_uvals <- bind_rows(urban_ntl_vals[[2]], urban_ntl_vals[[5]])
+pair_c_uvals <- bind_rows(urban_ntl_vals[[3]], urban_ntl_vals[[6]])
+
+for (i in 1:length(urban_ntl_vals)) {
+  shapiro_test <- shapiro.test(urban_ntl_vals[[i]]$value)
+  if (shapiro_test$p.value < 0.05) {
+    print("Reject normality")
+  } else {
+    print("Fail to reject normality")
+  }
+}
+
+wilcox_a <- wilcox.test(value ~ group, data = pair_a_uvals, alternative = "greater")
+
+wilcox_b <- wilcox.test(value ~ group, data = pair_b_uvals, alternative = "greater")
+
+wilcox_c <- wilcox.test(value ~ group, data = pair_c_uvals, alternative = "greater")
+
+```
 
 # Results
 
@@ -673,6 +708,14 @@ ggplot(data = all_pair_urban) +
 
 ```
 
+The results of the Wilcoxon test suggest that the observed differences between the Dark Sky communities and their Comparison counterparts are statistically significant. 
+
+| Pair | p-value | 
+|------|---------|
+| A |  `r pvalue(wilcox_a$p.value, accuracy = 0.0001)` |
+| B | `r pvalue(wilcox_b$p.value, accuracy = 0.0001)` |
+| C |  `r round(wilcox_c$p.value, digits = 5)` |
+
 
 ### Discussion of lighting policies
 
@@ -707,7 +750,7 @@ After controlling for population and urban area, the nighttime lights of DarkSky
 * Cities were paired based on same population as of 2023 ACS census. It is likely that the populations were not the same for all other years due to different rates of population growth.
 * One year of land cover data was assumed to represent each city's land cover over the 10-year span, which is a simplification. Future analysis could incorporate a more nuanced use of land cover data.
 * Similarly, annual population data could be incorporated to further explore the relationship between nighttime lights and population. 
-* Beyond this exploratory analysis, statistical tests could be used to quantify differences between cities. Analysis could also be expanded to different cities.
+* Analysis could be expanded to additional cities.
 
 
 
