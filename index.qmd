@@ -240,6 +240,7 @@ The final city pairs are as follows:
 | C | Bee Cave, TX | `r format(beecave_sf$estimate, big.mark = ",", scientific = FALSE)` |
 | C | Clanton, AL | `r format(clanton_sf$estimate, big.mark = ",", scientific = FALSE)` |
 
+Annual population data for each city were downloaded from the ACS. The 5-year ACS was used for years 2014-2023. Since the 1-year ACS is only available for cities with populations > 65,000, 2024 data could only be obtained for Pair A cities. For the remaining cities, 2023 data was used for 2024.
 
 ```{r Annual population data}
 # 2014-2023 uses 5-year ACS population data
@@ -504,7 +505,7 @@ wilcox_b <- wilcox.test(value ~ group, data = pair_b_uvals, alternative = "great
 
 wilcox_c <- wilcox.test(value ~ group, data = pair_c_uvals, alternative = "greater")
 
-# Repeat analysis for only 2021 - 2024
+# Repeat analysis for only 2021 - 2024 due to population trends
 pair_a_recent <- pair_a_uvals |>
   filter(name %in% c("t2021", "t2022", "t2023", "t2024"))
 pair_b_recent <- pair_b_uvals |>
@@ -664,7 +665,7 @@ leaflet() |>
 ```
 
 
-From the plot below, four of the six case study cities exhibit an increasing mean radiance trend similar to that of the national mean. However, the Pair A cities, Flagstaff and Scranton, show decreasing tendencies. The large difference in radiance values within pairs is also a notable feature of this plot. 
+From the plot below, four of the six case study cities exhibit an increasing mean radiance trend similar to that of the national mean. However, the Pair A cities, Flagstaff and Scranton, show decreasing tendencies. The large difference in radiance values within pairs is another notable feature of this plot. 
 
 ```{r compare city annual means}
 # Prep data frame so that plots show in desired order
@@ -689,7 +690,7 @@ ggplot(data = all_ntl_means_df) +
 
 ```
 
-Simply looking at the annual means provides interesting information, but fails to take into account two factors that may influence a city's nighttime light emissions: population over time and land cover. Annual population data reveals that Flagstaff and Bee Cave have both experienced steep population growth from 2014 to 2024. While Belvidere shows a generally decreasing trend, both Belvidere and Homer Glen had relatively stable populations with less than 5% change. Scranton and Clanton's populations have also remained quite stable. 
+Simply looking at the annual means provides interesting information, but fails to take into account two factors that may influence a city's observed nighttime light emissions: population over time and land cover. Annual population data reveals that Flagstaff and Bee Cave have both experienced steep population growth from 2014 to 2024. While Belvidere shows a generally decreasing trend, both Belvidere and Homer Glen had relatively stable populations with less than 5% change. Scranton and Clanton's populations have also remained quite stable. 
 
 ```{r Population trends}
 ggplot(data = all_ntl_means_df) +
@@ -706,7 +707,7 @@ ggplot(data = all_ntl_means_df) +
   theme(strip.text.x = element_text(color = "black"),
         plot.title = element_text(hjust = 0.5),
         axis.text.y = element_text(size = 8),
-        aspect.ratio = 1.6)
+        aspect.ratio = 1.8)
 ```
 
 Land cover differences between paired cities helps to explain some of the features and differences observed in the plot of mean nighttime lights versus time. Flagstaff contains much more undeveloped land like grassland and savannas, whereas most of Scranton is classified as urban and built up, which likely accounts for the much lower mean values for Flagstaff. Similarly, Clanton has a very small amount of land classified as urban & built-up, which probably contributes to a low mean radiance. 
