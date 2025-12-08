@@ -43,6 +43,7 @@ The following data were used.
 ```{r load packages}
 #| output: false
 
+# Load libraries
 library(tidyverse)
 library(leaflet)
 library(kableExtra)
@@ -164,32 +165,22 @@ For case study analyses, population data and local geographies for each Dark Sky
 #| output: false
 
 # Download population data
-# US population to search for companion cities
+# US population to search for comparison cities
 us_pop <- get_acs(geography = "place", state = NULL, 
                   variables = "B01003_001", key = census_api_key)
 
-# State populations for the states in which the selected DarksKy communities reside
-az_pop <- get_acs(geography = "place", state = "AZ", 
-                         variables = "B01003_001", key = census_api_key)
-
-il_pop <- get_acs(geography = "place", state = "IL", 
-                         variables = "B01003_001", key = census_api_key)
-
-tx_pop <- get_acs(geography = "place", state = "TX", 
-                         variables = "B01003_001", key = census_api_key)
-
 # Download local geographies: selected Dark Sky Places
-flagstaff <- places(state = "AZ", cb = TRUE, year = 2024) |>
+flagstaff_sf <- places(state = "AZ", cb = TRUE, year = 2024) |>
   filter(NAME == "Flagstaff") |>
   st_transform(crs = "epsg:4326") |>
   left_join(us_pop, by = "GEOID")
 
-homerglen <- places(state = "IL", cb = TRUE, year = 2024) |>
+homerglen_sf <- places(state = "IL", cb = TRUE, year = 2024) |>
   filter(NAME == "Homer Glen") |>
   st_transform(crs = "epsg:4326") |>
   left_join(us_pop, by = "GEOID")
 
-beecave <- places(state = "TX", cb = TRUE, year = 2024) |>
+beecave_sf <- places(state = "TX", cb = TRUE, year = 2024) |>
   filter(NAME == "Bee Cave") |>
   st_transform(crs = "epsg:4326") |>
   left_join(us_pop, by = "GEOID")
@@ -202,55 +193,108 @@ ACS population data were filtered to return a listing of candidate municipalitie
 #| output: false
 
 # Get listing of suitable comparison cities
-flagstaff_sim_pop <- us_pop |> filter(estimate >= (flagstaff$estimate - 0.005*flagstaff$estimate) 
-                                & estimate <= (flagstaff$estimate + 0.005*flagstaff$estimate)) |>
+flagstaff_sim_pop <- us_pop |> filter(estimate >= (flagstaff_sf$estimate - 0.005*flagstaff_sf$estimate) 
+                                & estimate <= (flagstaff_sf$estimate + 0.005*flagstaff_sf$estimate)) |>
   separate(NAME, into = c("city", "state"), sep = ", ")
 
-homerglen_sim_pop <- us_pop |> filter(estimate >= (homerglen$estimate - 0.005*homerglen$estimate) 
-                                & estimate <= (homerglen$estimate + 0.005*homerglen$estimate)) |>
+homerglen_sim_pop <- us_pop |> filter(estimate >= (homerglen_sf$estimate - 0.005*homerglen_sf$estimate) 
+                                & estimate <= (homerglen_sf$estimate + 0.005*homerglen_sf$estimate)) |>
   separate(NAME, into = c("city", "state"), sep = ", ")
 
-beecave_sim_pop <- us_pop |> filter(estimate >= (beecave$estimate - 0.005*beecave$estimate) 
-                                & estimate <= (beecave$estimate + 0.005*beecave$estimate)) |>
+beecave_sim_pop <- us_pop |> filter(estimate >= (beecave_sf$estimate - 0.005*beecave_sf$estimate) 
+                                & estimate <= (beecave_sf$estimate + 0.005*beecave_sf$estimate)) |>
   separate(NAME, into = c("city", "state"), sep = ", ")
 
 # Download/process comparison city data
  # Flagstaff counterpart
-scranton <- places(state = "PA", cb = TRUE, year = 2024) |>
+scranton_sf <- places(state = "PA", cb = TRUE, year = 2024) |>
   filter(NAME == "Scranton") |>
   left_join(us_pop, by = "GEOID") |>
   st_transform(crs = "epsg:4326")
 
  # Homer Glen counterpart
-belvidere <- places(state = "IL", cb = TRUE, year = 2024) |>
+belvidere_sf <- places(state = "IL", cb = TRUE, year = 2024) |>
   filter(NAME == "Belvidere") |>
   left_join(us_pop, by = "GEOID") |>
   st_transform(crs = "epsg:4326")
 
  # Bee Cave counterpart
-clanton <- places(state = "AL", cb = TRUE, year = 2024) |>
+clanton_sf <- places(state = "AL", cb = TRUE, year = 2024) |>
   filter(NAME == "Clanton") |>
   left_join(us_pop, by = "GEOID") |>
   st_transform(crs = "epsg:4326")
+
+city_names <- c("flagstaff", "homerglen", "beecave", "scranton", 
+                           "belvidere", "clanton")
 
 ```
 
 The final city pairs are as follows:
 
-| Pair | Community | Population | 
+| Pair | Community | Population (2023) | 
 |------|-----------|------------|
-| A | Flagstaff, AZ | `r format(flagstaff$estimate, big.mark = ",", scientific = FALSE)` |
-| A | Scranton, PA | `r format(scranton$estimate, big.mark = ",", scientific = FALSE)` |
-| B | Homer Glen, IL | `r format(homerglen$estimate, big.mark = ",", scientific = FALSE)` |
-| B | Belvidere, IL | `r format(belvidere$estimate, big.mark = ",", scientific = FALSE)` |
-| C | Bee Cave, TX | `r format(beecave$estimate, big.mark = ",", scientific = FALSE)` |
-| C | Clanton, AL | `r format(clanton$estimate, big.mark = ",", scientific = FALSE)` |
+| A | Flagstaff, AZ | `r format(flagstaff_sf$estimate, big.mark = ",", scientific = FALSE)` |
+| A | Scranton, PA | `r format(scranton_sf$estimate, big.mark = ",", scientific = FALSE)` |
+| B | Homer Glen, IL | `r format(homerglen_sf$estimate, big.mark = ",", scientific = FALSE)` |
+| B | Belvidere, IL | `r format(belvidere_sf$estimate, big.mark = ",", scientific = FALSE)` |
+| C | Bee Cave, TX | `r format(beecave_sf$estimate, big.mark = ",", scientific = FALSE)` |
+| C | Clanton, AL | `r format(clanton_sf$estimate, big.mark = ",", scientific = FALSE)` |
 
+
+```{r Annual population data}
+# 2014-2023 uses 5-year ACS population data
+annual_acs <- purrr::map(years[1:10],
+               ~ get_acs(geography = "place", 
+                         state = c("AZ", "IL", "TX", "PA", "AL"),
+                         variables = "B01003_001", 
+                         key = census_api_key, 
+                         year = .x, 
+                         survey = "acs5")) |>
+  map2(years[1:10], ~ mutate(.x, id = .y)) |>
+  list_rbind() |>
+  filter(GEOID %in% c(flagstaff_sf$GEOID, homerglen_sf$GEOID, beecave_sf$GEOID,
+                      scranton_sf$GEOID, belvidere_sf$GEOID, clanton_sf$GEOID)) |>
+  separate(NAME, into = c("city", "state"), sep = ", ") |>
+  rename(year = id, pop_est = estimate) |>
+  mutate(city = case_when(
+    city == "Flagstaff city" ~ "flagstaff",
+    city == "Scranton city" ~ "scranton",
+    city == "Homer Glen village" ~ "homerglen",
+    city == "Belvidere city" ~ "belvidere",
+    city == "Bee Cave city" ~ "beecave",
+    city == "Clanton city" ~ "clanton",
+  ))
+
+# 2024 requires 1-year ACS: only available for geographies with populations of 65000 and greater
+pop_2024 <- get_acs(geography = "place", state = c("AZ", "PA"),
+                                variables = "B01003_001", key = census_api_key, 
+                                year = 2024, survey = "acs1")
+
+flagstaff_2024 <- pop_2024 |>
+  filter(GEOID == flagstaff_sf$GEOID) |>
+  separate(NAME, into = c("city", "state"), sep = ", ") |>
+  rename(pop_est = estimate) |>
+  mutate(year = 2024, city = "flagstaff")
+
+scranton_2024 <- pop_2024 |>
+  filter(GEOID == scranton_sf$GEOID) |>
+  separate(NAME, into = c("city", "state"), sep = ", ") |>
+  rename(pop_est = estimate) |>
+  mutate(year = 2024, city = "scranton")
+
+# Since data unavailable for smaller cities for 2024, impute 2023 data
+other_cities_2024 <- annual_acs |>
+  filter(year == 2023 & city != "flagstaff" & city != "scranton") |>
+  mutate(year = 2024)
+
+all_annual_acs <- annual_acs |>
+  rbind(flagstaff_2024, scranton_2024, other_cities_2024)
+
+```
 
 After selecting cities, the annual US nighttime lights rasters were read in and subsetted to create a raster and dataframe of mean values for each city. Since simply looking at annual means for each city may be more of a proxy for overall development than for lighting policy, land use/land cover data[^1] were also brought in to help make comparisons across communities more meaningful. The land cover rasters were cropped to each city, and then the urban areas were isolated, allowing for calculation of annual mean nighttime lights from urban areas only.
 
 [^1]: Although land cover changes over the period from 2014 to 2024, for the purposes of this project, only one year of land cover data was considered for each community. Data availability is one reason for this simplification -- annual data is not available for all study areas for all years, and the MODIS science team urges caution when using land cover layers for 2021 and beyond due to lack of updates to the classification training database [11]. Therefore, 2019 data was used for all cities except for Clanton, which used 2020 data.
-
 
 
 ```{r Read in yearly national raster data}
@@ -261,10 +305,9 @@ After selecting cities, the annual US nighttime lights rasters were read in and 
 # Nighttime lights
 #---
 # Subset nighttime lights rasters to each city
-city_names <- c("flagstaff", "homerglen", "beecave", "scranton", 
-                           "belvidere", "clanton")
-cities <- list(flagstaff, homerglen, beecave, scranton, belvidere, clanton)
-city_rasters <- vector("list", length = length(cities))
+city_sf_list <- list(flagstaff_sf, homerglen_sf, beecave_sf, 
+                     scranton_sf, belvidere_sf, clanton_sf)
+city_ntl_rasters <- vector("list", length = length(city_names))
 
 # Load files for each year
 for (i in 1:length(years)){
@@ -276,49 +319,45 @@ for (i in 1:length(years)){
   year_rast <- rast(rast_file)
   
   # Loop over cities
-  for (j in 1:length(cities)) {
+  for (j in 1:length(city_sf_list)) {
     # Crop and mask to city extent
     current_rast <- year_rast |>
-      terra::crop(cities[[j]]) |>
-      mask(cities[[j]])
+      terra::crop(city_sf_list[[j]]) |>
+      mask(city_sf_list[[j]])
     
     # Create list entry during first iteration, then append in subsequent iterations
     if (i == 1) {
-    city_rasters[[j]] <- list(current_rast)
+    city_ntl_rasters[[j]] <- list(current_rast)
     } else {
-    city_rasters[[j]][[length(city_rasters[[j]]) + 1]] <- current_rast
+    city_ntl_rasters[[j]][[length(city_ntl_rasters[[j]]) + 1]] <- current_rast
     }
   }
 }
 
 # Stack city lists 
-city_rasters <- lapply(city_rasters, rast)
+city_ntl_rasters <- lapply(city_ntl_rasters, rast)
 
 # Create separate rasters for each city 
-city_var_names <- paste0(city_names, "_rast")
-for (c in 1:length(city_var_names)) {
-  assign(city_var_names[c], city_rasters[[c]])
-}
+#city_ntl_var_names <- paste0(city_names, "_ntl_rast")
+#for (c in 1:length(city_ntl_var_names)) {
+#  assign(city_ntl_var_names[c], city_ntl_rasters[[c]])
+#}
 
 # Calculate annual means
-annual_means <- vector("list", length = length(cities))
-for (i in 1:length(city_rasters)) {
-  ntl_vals <- data.frame(values(city_rasters[[i]])) |>
-    summarize(across(t2014:t2024, ~ mean(.x, na.rm = TRUE)))
-  
-  annual_means[[i]] <- ntl_vals
-}
-
-# Create mean dataframes for each city
-city_df_var_names <- paste0(city_names, "_means")
-for (i in 1:length(annual_means)) {
-  df <- annual_means[[i]] |>
+annual_ntl_means <- vector("list", length = length(city_names))
+for (i in 1:length(city_ntl_rasters)) {
+  ntl_vals <- data.frame(values(city_ntl_rasters[[i]])) |>
+    summarize(across(t2014:t2024, ~ mean(.x, na.rm = TRUE))) |>
     pivot_longer(cols = t2014:t2024) |>
-    mutate(name = years) |>
+    mutate(name = years, city = city_names[i]) |>
     rename(year = name, mean_ntl = value)
   
-  assign(city_df_var_names[i], df)
+  annual_ntl_means[[i]] <- ntl_vals
 }
+
+ntl_means_df <- list_rbind(annual_ntl_means) |>
+  left_join(all_annual_acs, by = join_by(city == city, year == year)) |>
+  mutate(percap_mean_ntl = mean_ntl / pop_est)
 
 #---
 # Land cover data
@@ -332,14 +371,14 @@ land_use_rast_2019 <- rast("MCD12Q1.061_LC_Type1_doy2019001000000_aid0001.tif")
 land_use_rast_2020 <- rast("MCD12Q1.061_LC_Type1_doy2020001000000_aid0001.tif")
 
 # Subset land cover rasters to each city
-land_use_rasters <- vector("list", length = length(cities))
-urban_ntl_dfs <- vector("list", length = length(cities))
-urban_ntl_vals <- vector("list", length = length(cities))
+land_use_rasters <- vector("list", length = length(city_sf_list))
+urban_ntl_dfs <- vector("list", length = length(city_sf_list))
+urban_ntl_vals <- vector("list", length = length(city_sf_list))
 group_assign <- c("Dark Sky", "Dark Sky", "Dark Sky", "Comparison", "Comparison", "Comparison")
 pair_assign <- c("A", "B", "C", "A", "B", "C")
 
 
-for (i in 1:length(cities)) {
+for (i in 1:length(city_names)) {
   # Specify which data to use (2019 for all cities but Clanton)
   if (i == 6) {
     land_use_rast <- land_use_rast_2020
@@ -349,40 +388,43 @@ for (i in 1:length(cities)) {
   
   # Crop and mask to city extent
   current_rast <- land_use_rast |>
-    terra::crop(cities[[i]]) |>
-    mask(cities[[i]])
+    terra::crop(city_sf_list[[i]]) |>
+    mask(city_sf_list[[i]])
   # Save to list for future use 
   land_use_rasters[[i]] <- current_rast
   
   # Mask all but urban land use (land use code = 13)
   urban_area <- current_rast
   urban_area[urban_area != 13] <- NA
-  city_urban <- city_rasters[[i]] |>
+  city_urban <- city_ntl_rasters[[i]] |>
     mask(urban_area) 
   
   # Calculate mean NTL for urban areas 
   urban_ntl_dfs[[i]] <- data.frame(values(city_urban)) |>
     summarize(across(t2014:t2024, ~ mean(.x, na.rm = TRUE))) |>
     pivot_longer(cols = t2014:t2024) |>
-    mutate(name = years) |>
-    rename(year = name, mean_urban_ntl = value)
+    mutate(name = years, city = city_names[i]) |>
+    rename(year = name, mean_urban_ntl = value) 
   
   # Compile values for statistical tests
-  # put these outside the loop when done. also replace paste0 with city_name
-  
   urban_ntl_vals[[i]] <- data.frame(values(city_urban)) |>
     pivot_longer(cols = t2014:t2024) |>
     filter(!is.na(value)) |>
     mutate(city = city_names[[i]], group = group_assign[i], pair = pair_assign[i])
 }
 
-# Create separate dataframes from list object
-urban_ntl_var_names <- paste0(city_names, "_urban_ntl")
-
-for (i in 1:length(urban_ntl_dfs)) {
-  assign(urban_ntl_var_names[i], urban_ntl_dfs[[i]])
-}
-
+# Combine all mean NTL data into single data frame
+all_ntl_means_df <- ntl_means_df |>
+  left_join(list_rbind(urban_ntl_dfs), join_by(year == year, city == city)) |>
+  mutate(mean_percap_urban_ntl = mean_urban_ntl / pop_est, 
+         pair = case_when(
+           city == "flagstaff" | city == "scranton" ~ "A",
+           city == "homerglen" | city == "belvidere" ~ "B",
+           city == "beecave" | city == "clanton" ~ "C"),
+         group = case_when(
+           city == "flagstaff" | city == "homerglen" | city == "beecave" ~ "Dark Sky",
+           city == "scranton" | city == "belvidere" | city == "clanton" ~ "Comparison")
+         )
 
 # Prepare data for sample land cover plots
 # Define land cover encoding
@@ -397,82 +439,51 @@ Land_Cover_Type_1 <- c(
 lcd <- data.frame(
   ID = Land_Cover_Type_1,
   landcover = names(Land_Cover_Type_1),
-  stringsAsFactors = FALSE
-)
+  stringsAsFactors = FALSE)
 
 # Create data frames for plotting
-scranton_lulc <- as.data.frame(land_use_rasters[[4]], xy = TRUE) |>
-  left_join(lcd, by = join_by(MCD12Q1.061_LC_Type1_doy2019001000000_aid0001 == ID))
-
-# Since Scranton has more landcover types, use its types to join with Flagstaff for a consistent color scheme
-lcd_reduced <- lcd |>
-  filter(landcover %in% unique(scranton_lulc$landcover))
-  
 flagstaff_lulc <- as.data.frame(land_use_rasters[[1]], xy = TRUE) |>
-  right_join(lcd_reduced, by = join_by(MCD12Q1.061_LC_Type1_doy2019001000000_aid0001 == ID))
+  left_join(lcd, by = join_by(MCD12Q1.061_LC_Type1_doy2019001000000_aid0001 == ID)) |>
+  rename(lc_code = MCD12Q1.061_LC_Type1_doy2019001000000_aid0001) |>
+  mutate(city = "Flagstaff")
 
+scranton_lulc <- as.data.frame(land_use_rasters[[4]], xy = TRUE) |>
+  left_join(lcd, by = join_by(MCD12Q1.061_LC_Type1_doy2019001000000_aid0001 == ID)) |>
+  rename(lc_code = MCD12Q1.061_LC_Type1_doy2019001000000_aid0001) |>
+  mutate(city = "Scranton")
 
-```
+homerglen_lulc <- as.data.frame(land_use_rasters[[2]], xy = TRUE) |>
+  left_join(lcd, by = join_by(MCD12Q1.061_LC_Type1_doy2019001000000_aid0001 == ID)) |>
+  rename(lc_code = MCD12Q1.061_LC_Type1_doy2019001000000_aid0001) |>
+  mutate(city = "Homer Glen")
 
-Paired data frames were created from the processed data to facilitate plotting and visualizations. 
+belvidere_lulc <- as.data.frame(land_use_rasters[[5]], xy = TRUE) |>
+  left_join(lcd, by = join_by(MCD12Q1.061_LC_Type1_doy2019001000000_aid0001 == ID)) |>
+  rename(lc_code = MCD12Q1.061_LC_Type1_doy2019001000000_aid0001) |>
+  mutate(city = "Belvidere")
 
+beecave_lulc <- as.data.frame(land_use_rasters[[3]], xy = TRUE) |>
+  left_join(lcd, by = join_by(MCD12Q1.061_LC_Type1_doy2019001000000_aid0001 == ID)) |>
+  rename(lc_code = MCD12Q1.061_LC_Type1_doy2019001000000_aid0001) |>
+  mutate(city = "Bee Cave")
 
-```{r Paired data frames}
-# Annual means
-# Pair A: Flagstaff and Scranton
-flagstaff_means_label <- flagstaff_means |>
-  mutate(city = "Flagstaff", pair = "A", group = "Dark Sky")
-scranton_means_label <- scranton_means |>
-  mutate(city = "Scranton", pair = "A", group = "Comparison")
-pair_a_means <- bind_rows(flagstaff_means_label, scranton_means_label)
+clanton_lulc <- as.data.frame(land_use_rasters[[6]], xy = TRUE) |>
+  left_join(lcd, by = join_by(MCD12Q1.061_LC_Type1_doy2020001000000_aid0001 == ID)) |>
+  rename(lc_code = MCD12Q1.061_LC_Type1_doy2020001000000_aid0001) |>
+  mutate(city = "Clanton")
 
-# Pair B: Homer Glen and Belvidere
-homerglen_means_label <- homerglen_means |>
-  mutate(city = "Homer Glen", pair = "B", group = "Dark Sky")
-belvidere_means_label <- belvidere_means |>
-  mutate(city = "Belvidere", pair = "B", group = "Comparison")
-pair_b_means <- bind_rows(homerglen_means_label, belvidere_means_label)
-
-# Pair C: Bee Cave and Clanton
-beecave_means_label <- beecave_means |>
-  mutate(city = "Bee Cave", pair = "C", group = "Dark Sky")
-clanton_means_label <- clanton_means |>
-  mutate(city = "Clanton", pair = "C", group = "Comparison")
-pair_c_means <- bind_rows(beecave_means_label, clanton_means_label)
-
-all_pair_means <- bind_rows(pair_a_means, pair_b_means, pair_c_means)
-pair_names <- c("Flagstaff & Scranton", "Homer Glen & Belvidere", "Bee Cave & Clanton")
-names(pair_names) <- c("A", "B", "C")
-
-## Urban means
-# Pair A: Flagstaff and Scranton
-flagstaff_urban_label <- flagstaff_urban_ntl |>
-  mutate(city = "Flagstaff", pair = "A", group = "Dark Sky")
-scranton_urban_label <- scranton_urban_ntl |>
-  mutate(city = "Scranton", pair = "A", group = "Comparison")
-pair_a_urban <- bind_rows(flagstaff_urban_label, scranton_urban_label)
-
-# Pair B: Homer Glen and Belvidere
-homerglen_urban_label <- homerglen_urban_ntl |>
-  mutate(city = "Homer Glen", pair = "B", group = "Dark Sky")
-belvidere_urban_label <- belvidere_urban_ntl |>
-  mutate(city = "Belvidere", pair = "B", group = "Comparison")
-pair_b_urban <- bind_rows(homerglen_urban_label, belvidere_urban_label)
-
-# Pair C: Bee Cave and Clanton
-beecave_urban_label <- beecave_urban_ntl |>
-  mutate(city = "Bee Cave", pair = "C", group = "Dark Sky")
-clanton_urban_label <- clanton_urban_ntl |>
-  mutate(city = "Clanton", pair = "C", group = "Comparison")
-pair_c_urban <- bind_rows(beecave_urban_label, clanton_urban_label)
-
-all_pair_urban <- bind_rows(pair_a_urban, pair_b_urban, pair_c_urban)
+all_lulc <- bind_rows(flagstaff_lulc, scranton_lulc, homerglen_lulc, belvidere_lulc, 
+                      beecave_lulc, clanton_lulc)
+all_lulc$city <- factor(all_lulc$city, levels = c("Flagstaff", "Scranton",
+                                                     "Homer Glen", "Belvidere",
+                                                     "Bee Cave", "Clanton"))
 
 ```
 
-Statistical testing was done on the nonaggregated urban lights values. Although there are thousands of samples, radiance data exhibit a heavy right skew. The Shapiro-Wilk test was used to confirm non-normality. Since the data are not normal, a Wilcoxon test was used for each community pair to test if the Comparison group radiance is greater than that of Dark Sky group.
+Statistical testing was done on the nonaggregated urban lights values. Although there are thousands of samples, radiance data exhibit a heavy right skew. The Shapiro-Wilk test was used to confirm non-normality, and since the data are not normal, a Wilcoxon test was used for each community pair to test if the Comparison group radiance is greater than that of the Dark Sky group.
 
 ```{r Stat test}
+#| results: hide
 # Prep values for statistical testing
 pair_a_uvals <- bind_rows(urban_ntl_vals[[1]], urban_ntl_vals[[4]])
 pair_b_uvals <- bind_rows(urban_ntl_vals[[2]], urban_ntl_vals[[5]])
@@ -492,6 +503,20 @@ wilcox_a <- wilcox.test(value ~ group, data = pair_a_uvals, alternative = "great
 wilcox_b <- wilcox.test(value ~ group, data = pair_b_uvals, alternative = "greater")
 
 wilcox_c <- wilcox.test(value ~ group, data = pair_c_uvals, alternative = "greater")
+
+# Repeat analysis for only 2021 - 2024
+pair_a_recent <- pair_a_uvals |>
+  filter(name %in% c("t2021", "t2022", "t2023", "t2024"))
+pair_b_recent <- pair_b_uvals |>
+  filter(name %in% c("t2021", "t2022", "t2023", "t2024"))
+pair_c_recent <- pair_c_uvals |>
+  filter(name %in% c("t2021", "t2022", "t2023", "t2024"))
+
+wilcox_a_recent <- wilcox.test(value ~ group, data = pair_a_recent, alternative = "greater")
+
+wilcox_b_recent <- wilcox.test(value ~ group, data = pair_b_recent, alternative = "greater")
+
+wilcox_c_recent <- wilcox.test(value ~ group, data = pair_c_recent, alternative = "greater")
 
 ```
 
@@ -573,32 +598,32 @@ girafe(ggobj = st_pct_change_map,
 ```{r leaflet map}
 
 # Leaflet prep
-fs_coord <- st_centroid(flagstaff) |>
+fs_coord <- st_centroid(flagstaff_sf) |>
   st_coordinates() |>
   data.frame() |>
   mutate(city = "Flagstaff", pair = "A", group = "Dark Sky")
 
-sc_coord <- st_centroid(scranton) |>
+sc_coord <- st_centroid(scranton_sf) |>
   st_coordinates() |>
   data.frame() |>
   mutate(city = "Scranton", pair = "A", group = "Comparison")
 
-hg_coord <- st_centroid(homerglen) |>
+hg_coord <- st_centroid(homerglen_sf) |>
   st_coordinates() |>
   data.frame() |>
   mutate(city = "Homer Glen", pair = "B", group = "Dark Sky")
 
-bv_coord <- st_centroid(belvidere) |>
+bv_coord <- st_centroid(belvidere_sf) |>
   st_coordinates() |>
   data.frame() |>
   mutate(city = "Belvidere", pair = "B", group = "Comparison")
 
-bc_coord <- st_centroid(beecave) |>
+bc_coord <- st_centroid(beecave_sf) |>
   st_coordinates() |>
   data.frame() |>
   mutate(city = "Bee Cave", pair = "C", group = "Dark Sky")
 
-cl_coord <- st_centroid(clanton) |>
+cl_coord <- st_centroid(clanton_sf) |>
   st_coordinates() |>
   data.frame() |>
   mutate(city = "Clanton", pair = "C", group = "Comparison")
@@ -638,12 +663,16 @@ leaflet() |>
 
 ```
 
-Four of the six case study cities exhibit an increasing trend similar to that of the national mean. However, the Pair A cities, Flagstaff and Scranton, show decreasing tendencies. Also notable from this plot are the large differences in radiance values within pairs, despite controlling for population during the city selection process.
+
+From the plot below, four of the six case study cities exhibit an increasing mean radiance trend similar to that of the national mean. However, the Pair A cities, Flagstaff and Scranton, show decreasing tendencies. The large difference in radiance values within pairs is also a notable feature of this plot. 
 
 ```{r compare city annual means}
+# Prep data frame so that plots show in desired order
+all_ntl_means_df$pair <- as.factor(all_ntl_means_df$pair)
+pair_names <- c("A" = "Flagstaff & Scranton", "B" = "Homer Glen & Belvidere", "C" = "Bee Cave & Clanton")
 
 # Plot of annual means
-ggplot(data = all_pair_means) +
+ggplot(data = all_ntl_means_df) +
   geom_line(aes(x = year, y = mean_ntl, color = pair, linetype = group), linewidth = 1) +
   facet_wrap(~ pair, labeller = labeller(pair = pair_names)) +
   scale_linetype_manual(values = c("Dark Sky" = "solid", "Comparison" = "dashed")) +
@@ -655,46 +684,58 @@ ggplot(data = all_pair_means) +
        color = "Pair") +
   theme_light() +
   theme(strip.text.x = element_text(color = "black"),
-        plot.title = element_text(hjust = 0.5))
+        plot.title = element_text(hjust = 0.5),
+        aspect.ratio = 1.8)
 
 ```
 
-A quick look at the land use for Flagstaff compared to Scranton helps to explain the vast difference in mean nighttime lights between the two cities. Flagstaff contains much more undeveloped land like grassland and savannas, whereas most of Scranton is classified as urban and built up.
+Simply looking at the annual means provides interesting information, but fails to take into account two factors that may influence a city's nighttime light emissions: population over time and land cover. Annual population data reveals that Flagstaff and Bee Cave have both experienced steep population growth from 2014 to 2024. While Belvidere shows a generally decreasing trend, both Belvidere and Homer Glen had relatively stable populations with less than 5% change. Scranton and Clanton's populations have also remained quite stable. 
 
-```{r Land cover plots Flagstaff and Scranton}
-# Sample comparison of land cover
-fs_lulc_plot <- ggplot(flagstaff_lulc, aes(x = x, y = y)) +
+```{r Population trends}
+ggplot(data = all_ntl_means_df) +
+  geom_line(aes(x = year, y = pop_est, color = pair, linetype = group), linewidth = 1) +
+  facet_wrap(~ pair, labeller = labeller(pair = pair_names), scale = "free_y") +
+  scale_linetype_manual(values = c("Dark Sky" = "solid", "Comparison" = "dashed")) +
+  scale_color_manual(values = c("A" = "firebrick", "B" = "royalblue3", "C" = "green4")) +
+  labs(x = "Year",
+       y = "Population",
+       title = "Annual Populations",
+       linetype = "City Type",
+       color = "Pair") +
+  theme_light() +
+  theme(strip.text.x = element_text(color = "black"),
+        plot.title = element_text(hjust = 0.5),
+        axis.text.y = element_text(size = 8),
+        aspect.ratio = 1.6)
+```
+
+Land cover differences between paired cities helps to explain some of the features and differences observed in the plot of mean nighttime lights versus time. Flagstaff contains much more undeveloped land like grassland and savannas, whereas most of Scranton is classified as urban and built up, which likely accounts for the much lower mean values for Flagstaff. Similarly, Clanton has a very small amount of land classified as urban & built-up, which probably contributes to a low mean radiance. 
+
+```{r Land cover plots}
+
+ggplot(all_lulc, aes(x = x, y = y)) +
   geom_tile(aes(fill = landcover)) +
+  facet_wrap(~ city, nrow = 3, scales = "free") +
   coord_quickmap() +
   theme_light() +
-  scale_fill_viridis_d() +
-  labs(x = NULL,
-       y = NULL,
-       title = "Flagstaff Land Cover",
-       fill = NULL)
-  
-sc_lulc_plot <- ggplot(scranton_lulc, aes(x = x, y = y)) +
-  geom_tile(aes(fill = landcover)) +
-  coord_quickmap() +
-  theme_light() +
-  scale_fill_viridis_d() +
-  labs(x = NULL,
-       y = NULL,
-       title = "Scranton Land Cover",
-       fill = NULL) +
-  scale_x_continuous(breaks = seq(-75.7, -75.6, by = 0.05))
-
-fs_lulc_plot + sc_lulc_plot + plot_layout(guides = "collect") & theme(legend.position = "bottom")
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        strip.text.x = element_text(color = "black")) +
+  labs(fill = "Land Cover",
+       caption = "Data: NASA & US Census Bureau") +
+  scale_fill_viridis_d()
 
 ```
 
-Given the imbalances in land cover between different cities, restricting analysis to urban areas is a more effective means of comparison. (Proceeding this way introduces an assumption that any lighting policy effects outside of non-built-up areas are dwarfed by those on urban areas.) From the plots of urban mean radiance, we can see that the radiance for the Dark Sky Places is generally lower than for their paired cities.
+Given the imbalances in land cover between different cities, it is useful for the sake of comparison to restrict analysis to urban areas. Proceeding this way introduces the assumption that any lighting policy effects outside of non-built-up areas are dwarfed by those on urban areas. From the plots of urban mean radiance, we can see that the radiance for the Dark Sky Places is generally lower than for their paired cities.
 
 ```{r Urban NTL comparison}
 # Urban mean NTL plot
-ggplot(data = all_pair_urban) +
+ggplot(data = all_ntl_means_df) +
   geom_line(aes(x = year, y = mean_urban_ntl, color = pair, linetype = group), linewidth = 1) +
-  facet_wrap(~ pair, labeller = labeller(pair = pair_names)) +
+  facet_wrap(~ pair, labeller = labeller(pair = pair_names), scales = "free_y") +
   scale_linetype_manual(values = c("Dark Sky" = "solid", "Comparison" = "dashed")) +
   scale_color_manual(values = c("A" = "firebrick", "B" = "royalblue3", "C" = "green4")) +
   labs(x = "Year",
@@ -704,17 +745,18 @@ ggplot(data = all_pair_urban) +
        color = "Pair") +
   theme_light() +
   theme(strip.text.x = element_text(color = "black"),
-        plot.title = element_text(hjust = 0.5))
+        plot.title = element_text(hjust = 0.5),
+        aspect.ratio = 1.8)
 
 ```
 
-The results of the Wilcoxon test suggest that the observed differences between the Dark Sky communities and their Comparison counterparts are statistically significant. 
+The results of the Wilcoxon test on the urban radiance values suggest that the observed differences between the Dark Sky communities and their Comparison counterparts are statistically significant. Given the population discrepancies between the Pair A and Pair C cities in the earlier analysis years, analysis was done on the entire set of data and on a subset of data from 2021-2024, when the populations became more comparable. 
 
-| Pair | p-value | 
-|------|---------|
-| A |  `r pvalue(wilcox_a$p.value, accuracy = 0.0001)` |
-| B | `r pvalue(wilcox_b$p.value, accuracy = 0.0001)` |
-| C |  `r round(wilcox_c$p.value, digits = 5)` |
+| Pair | p-value (2014-2024) | p-value (2021-2024) |
+|------|---------------------|---------------------|
+| A |  `r pvalue(wilcox_a$p.value, accuracy = 0.0001)` | `r pvalue(wilcox_a_recent$p.value, accuracy = 0.0001)` |
+| B | `r pvalue(wilcox_b$p.value, accuracy = 0.0001)` | `r pvalue(wilcox_b_recent$p.value, accuracy = 0.0001)` |
+| C |  `r round(wilcox_c$p.value, digits = 5)` | `r round(wilcox_c_recent$p.value, digits = 5)` |
 
 
 ### Discussion of lighting policies
@@ -747,11 +789,9 @@ After controlling for population and urban area, the nighttime lights of DarkSky
 ### Limitations and further opportunities:
 
 * Radiance of nighttime lights is not a direct measure of light pollution. Some cities are switching from orange high pressure sodium lamps to white LEDs. VIIRS spectral range does not completely cover the blue light peak of many modern white LEDs, which can lead to somewhat misleading decreases in satellite-observed radiance [19]. 
-* Cities were paired based on same population as of 2023 ACS census. It is likely that the populations were not the same for all other years due to different rates of population growth.
-* One year of land cover data was assumed to represent each city's land cover over the 10-year span, which is a simplification. Future analysis could incorporate a more nuanced use of land cover data.
-* Similarly, annual population data could be incorporated to further explore the relationship between nighttime lights and population. 
+* Cities were paired based on 2023 ACS 5-year population estimates. As discussed, different rates of population growth should be considered. Further analysis could leverage more sophisticated use of population and land cover data. Census block groups could be rasterized to estimate the population within a nighttime lights grid cell.
+* One year of land cover data was assumed to represent each city's land cover over the 10-year span, which is a simplification. Future analysis could incorporate a more nuanced use of land cover data (once AppEEARs processing is operational again).
 * Analysis could be expanded to additional cities.
-
 
 
 # References
