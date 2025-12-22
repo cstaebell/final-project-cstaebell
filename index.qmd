@@ -164,6 +164,8 @@ For case study analyses, population data and local geographies for each Dark Sky
 ```{r Download census data}
 #| output: false
 
+census_api_key <- Sys.getenv("CENSUS_API_KEY")
+
 # Download population data
 # US population to search for comparison cities
 us_pop <- get_acs(geography = "place", state = NULL, 
