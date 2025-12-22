@@ -2,7 +2,7 @@
 
 With growing awareness of light pollution and the need to conserve dark night skies for scientific, ecological, and aesthetic reasons, an increasing number of communities are adopting measures to decrease their emissions of artificial light at night. This project aims to explore trends in nighttime light levels first from a national contiguous US perspective, and also through more detailed case studies of individual cities. 
 
-This repository hosts all data and files needed to produce the project as a Quarto website.
+This repository hosts all data and files needed to produce this spatial data science project as a Quarto website.
 
 ## Data
 
